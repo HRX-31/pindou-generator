@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>格子图</title>
+  <meta name="description" content="上传图片，按自定义格数生成拼豆图和色号图。图片只在浏览器里处理，不会上传。" />
+  <style>
+    :root {
+      --paper: #f6f1e8;
+      --panel: #fffdf8;
+      --ink: #1c1915;
+      --muted: #6d645a;
+      --line: #e4d9cb;
+      --stamp: #b8432f;
+      --stamp-dark: #8d3020;
+      --shadow: 0 18px 40px rgba(60, 42, 24, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% -10%, #fff 0, transparent 42%),
+        linear-gradient(180deg, #fbf7f1 0%, var(--paper) 40%, #efe6da 100%);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 64px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-family: Palatino, "Palatino Linotype", "Songti SC", serif;
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    #h5Switch { flex: none; height: 36px; font-size: 14px; }
+    #h5Switch[aria-pressed="true"] {
+      background: var(--stamp);
+      border-color: var(--stamp-dark);
+      color: #fffaf7;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 22px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .source, .result { padding: 18px; }
+
+    .drop {
+      min-height: 220px;
+      border: 1.5px dashed #c9bba8;
+      border-radius: 14px;
+      background: #fbf6ee;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .drop.is-hot { border-color: var(--stamp); background: #fff6f2; }
+    .drop strong { display: block; font-size: 18px; margin-bottom: 6px; }
+    .drop span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .original {
+      display: none;
+      width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .times { padding-bottom: 12px; color: var(--muted); font-size: 22px; }
+
+    label.dim { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+
+    input[type="text"] {
+      width: 100%;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 28px;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+      font-family: Palatino, "Palatino Linotype", serif;
+    }
+
+    input[type="text"]:focus {
+      outline: 2px solid rgba(184, 67, 47, 0.35);
+      border-color: var(--stamp);
+    }
+
+    .zoom-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .sheet-field {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-field.is-on { display: flex; }
+
+    .sheet-field input[type="text"] {
+      width: 72px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .zoom-bar[hidden] { display: none; }
+    .zoom-bar span { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; }
+
+    .options, .actions { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .options { margin: 14px 0; font-size: 14px; }
+    .options label { display: flex; gap: 6px; align-items: center; }
+
+    button {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.primary { background: var(--stamp); border-color: var(--stamp-dark); color: #fffaf7; }
+    button.primary:hover:not(:disabled) { background: var(--stamp-dark); }
+
+    .view-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      margin-top: 14px;
+      padding: 4px;
+      background: #f3ecdf;
+      border-radius: 12px;
+    }
+
+    .view-tabs button {
+      height: 36px;
+      padding: 0 4px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .view-tabs button.is-active {
+      background: #fff;
+      color: var(--stamp-dark);
+      box-shadow: 0 1px 2px rgba(60, 42, 24, 0.08);
+    }
+
+    .hint, .status { margin: 12px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .status.is-error { color: var(--stamp-dark); }
+
+    .stage {
+      min-height: 420px;
+      margin-top: 14px;
+      border-radius: 14px;
+      background:
+        linear-gradient(#f3ecdf 1px, transparent 1px),
+        linear-gradient(90deg, #f3ecdf 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-color: #fbf7f1;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .stage.is-code { display: block; padding: 0; overflow: hidden; }
+
+    .stage.is-bead {
+      display: flex;
+      align-items: center;
+      justify-content: safe center;
+      overflow: auto;
+    }
+
+    .stage canvas.bead-canvas {
+      flex: none;
+      max-width: none;
+      height: auto;
+      image-rendering: pixelated;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(60, 42, 24, 0.12);
+    }
+
+    .stage-original {
+      max-width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(60, 42, 24, 0.12);
+    }
+
+    .empty-copy { color: var(--muted); text-align: center; line-height: 1.6; }
+
+    .code-frame { position: relative; width: 100%; height: 520px; }
+    .code-scroll { height: 100%; overflow: auto; }
+    .code-overlay { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 128px;
+      overflow: auto;
+      margin-top: 12px;
+    }
+
+    .saver {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: end center;
+      padding: 12px;
+      background: rgba(28, 25, 21, 0.46);
+    }
+
+    .saver[hidden] { display: none; }
+
+    .saver-card {
+      width: min(560px, 100%);
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      padding: 16px;
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .saver-card p { margin: 0 0 12px; line-height: 1.55; }
+
+    .saver-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background: #fff;
+      -webkit-touch-callout: default;
+    }
+
+    .saver-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .saver-actions button { flex: 1; height: 48px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 26px;
+      padding: 0 8px 0 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 12px;
+    }
+
+    .chip i { width: 16px; height: 16px; border-radius: 50%; display: block; }
+    .chip b { font-weight: 700; }
+    .chip small { color: var(--muted); }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      header h1 { font-size: 32px; }
+    }
+
+    body.is-h5 main {
+      width: min(430px, calc(100% - 20px));
+      padding: 16px 0 32px;
+    }
+
+    body.is-h5 header h1 { font-size: 28px; }
+    body.is-h5 header p { font-size: 13px; }
+
+    body.is-h5 .layout {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    body.is-h5 .source,
+    body.is-h5 .result { padding: 14px; }
+    body.is-h5 .drop { min-height: 112px; padding: 16px; }
+    body.is-h5 .original { max-height: 180px; }
+    body.is-h5 input[type="text"] { height: 48px; font-size: 24px; }
+    body.is-h5 .actions button { flex: 1; height: 48px; }
+    body.is-h5 .view-tabs button { height: 40px; font-size: 13px; }
+    body.is-h5 .stage { min-height: 280px; }
+    body.is-h5 .code-frame { height: min(62dvh, 520px); }
+    body.is-h5 .stage-original { max-height: 360px; }
+    body.is-h5 .legend { max-height: 96px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="title-row">
+        <h1>格子图</h1>
+        <button id="h5Switch" type="button" aria-pressed="false">切换到 H5</button>
+      </div>
+      <p>上传原图，横向和纵向格数都可以自己填。原图按自身比例放在上方，多出来的高度用白色向下补上。色号图先显示完整图，再放大查看每一格的色号。图片只在你的浏览器里处理，不会上传到服务器。</p>
+    </header>
+    <div class="layout">
+      <section class="panel source">
+        <div id="drop" class="drop" role="button" tabindex="0">
+          <div>
+            <strong>放入原图</strong>
+            <span>点击或拖入 PNG、JPG、WebP</span>
+          </div>
+        </div>
+        <img id="original" class="original" alt="原图预览" />
+        <div class="meta">
+          <span id="fileName">尚未选择图片</span>
+          <span id="pixelSize"></span>
+        </div>
+        <p id="status" class="status" role="status"></p>
+      </section>
+      <section class="panel result">
+        <div class="fields">
+          <label class="dim">横向格数
+            <input id="cols" type="text" inputmode="numeric" value="52" aria-label="横向格数" data-last="52" />
+          </label>
+          <span class="times">×</span>
+          <label class="dim">纵向格数
+            <input id="rows" type="text" inputmode="numeric" value="52" aria-label="纵向格数" data-last="52" />
+          </label>
+        </div>
+        <p class="hint">修改横向或纵向格数，另一边会按原图比例自动计算（四舍五入）。</p>
+        <div class="options">
+          <label><input id="grid" type="checkbox" checked /> 画格线</label>
+          <label id="sheetField" class="sheet-field">下载张数
+            <input id="sheets" type="text" inputmode="numeric" value="1" aria-label="下载张数" data-last="1" />
+          </label>
+        </div>
+        <div class="actions">
+          <button id="recognize" class="primary" type="button" disabled>识别</button>
+          <button id="download" type="button" disabled>下载拼豆图</button>
+          <button id="downloadRecognition" type="button" disabled>下载软件识别图</button>
+        </div>
+        <p class="hint">软件识别图会在每个色格内标注对应色号，整张下载，格子大小一致。</p>
+        <div class="view-tabs" role="tablist" aria-label="查看方式">
+          <button type="button" data-view="source" role="tab">原图</button>
+          <button type="button" data-view="bead" class="is-active" role="tab" aria-selected="true">拼豆图</button>
+          <button type="button" data-view="code" role="tab">色号</button>
+          <button type="button" data-view="edge" role="tab">白边色号</button>
+        </div>
+        <div id="zoomBar" class="zoom-bar" hidden>
+          <button id="zoomOut" type="button">缩小</button>
+          <span id="zoomLabel">完整</span>
+          <button id="zoomIn" type="button">放大</button>
+        </div>
+        <p id="summary" class="hint">横向、纵向都可填 16–1000。色号图下载张数填 1 就是一整张；填 2、4、6 等会按这个数量切开。每格一样大，色号直接写在色格上。</p>
+        <div id="stage" class="stage">
+          <p class="empty-copy">识别后先看完整拼豆图。色号图默认也是完整图，放大后可以看清每一格的色号。</p>
+        </div>
+        <div id="legend" class="legend"></div>
+      </section>
+    </div>
+  </main>
+  <input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+  <div id="saver" class="saver" hidden>
+    <div class="saver-card">
+      <p id="saverText">图片已生成。点保存图片，或长按图片存到相册。</p>
+      <img id="saverImg" alt="生成的图纸" />
+      <div class="saver-actions">
+        <button id="saverSave" class="primary" type="button">保存图片</button>
+        <button id="saverClose" type="button">关闭</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const MIN = 16;
+    const MAX = 1000;
+    const EXPORT_CELL = 256;
+    const CODE_GLYPHS = {
+      A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+      B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+      C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
+      D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+      E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+      F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+      G: ["01111", "10000", "10000", "10111", "10001", "10001", "01111"],
+      H: ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+      M: ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+      0: ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+      1: ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+      2: ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+      3: ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+      4: ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+      5: ["11111", "10000", "10000", "11110", "00001", "00001", "11110"],
+      6: ["01110", "10000", "10000", "11110", "10001", "10001", "01110"],
+      7: ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+      8: ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+      9: ["01110", "10001", "10001", "01111", "00001", "00001", "01110"]
+    };
+    const NARROW_DIGITS = {
+      0: ["0110", "1001", "1001", "1001", "1001", "1001", "0110"],
+      1: ["0110", "0110", "0110", "0110", "0110", "0110", "1111"],
+      2: ["1110", "0001", "0001", "0110", "1000", "1000", "1111"],
+      3: ["1110", "0001", "0001", "0110", "0001", "0001", "1110"],
+      4: ["1001", "1001", "1001", "1111", "0001", "0001", "0001"],
+      5: ["1111", "1000", "1000", "1110", "0001", "0001", "1110"],
+      6: ["0110", "1000", "1000", "1110", "1001", "1001", "0110"],
+      7: ["1111", "0001", "0010", "0100", "0100", "0100", "0100"],
+      8: ["0110", "1001", "1001", "0110", "1001", "1001", "0110"],
+      9: ["0110", "1001", "1001", "0111", "0001", "0001", "0110"]
+    };
+
+    function LimitError() {
+      const error = new Error("limit");
+      error.name = "LimitError";
+      return error;
+    }
+
+    function isLimit(error) {
+      return !!error && error.name === "LimitError";
+    }
+
+    function isHandheld() {
+      const ua = navigator.userAgent || "";
+      if (/Android|iPhone|iPad|iPod|Mobile|HarmonyOS|OpenHarmony/i.test(ua)) return true;
+      return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    }
+
+    function isIOS() {
+      const ua = navigator.userAgent || "";
+      return /iPad|iPhone|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    const H5_KEY = "grid-h5";
+    const h5Switch = document.querySelector("#h5Switch");
+
+    function preferredH5() {
+      try {
+        const saved = localStorage.getItem(H5_KEY);
+        if (saved === "1") return true;
+        if (saved === "0") return false;
+      } catch (error) {}
+      return isHandheld() || window.matchMedia("(max-width: 860px)").matches;
+    }
+
+    function applyH5(on) {
+      document.body.classList.toggle("is-h5", on);
+      h5Switch.textContent = on ? "电脑版" : "切换到 H5";
+      h5Switch.setAttribute("aria-pressed", on ? "true" : "false");
+      window.requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+    }
+
+    applyH5(preferredH5());
+    h5Switch.addEventListener("click", () => {
+      const next = !document.body.classList.contains("is-h5");
+      try { localStorage.setItem(H5_KEY, next ? "1" : "0"); } catch (error) {}
+      applyH5(next);
+    });
+
+    function exportLimits() {
+      if (isHandheld()) {
+        const memory = Number(navigator.deviceMemory) || 0;
+        if (memory >= 8) {
+          return [
+            { side: 4096, area: 16777216 },
+            { side: 3072, area: 8 * 1024 * 1024 },
+            { side: 2048, area: 4 * 1024 * 1024 }
+          ];
+        }
+        if (memory >= 4) {
+          return [
+            { side: 3072, area: 8 * 1024 * 1024 },
+            { side: 2048, area: 4 * 1024 * 1024 },
+            { side: 1536, area: 2 * 1024 * 1024 }
+          ];
+        }
+        return [
+          { side: 2048, area: 4 * 1024 * 1024 },
+          { side: 1536, area: 2 * 1024 * 1024 },
+          { side: 1024, area: 1024 * 1024 }
+        ];
+      }
+      return [
+        { side: 16384, area: 180000000 },
+        { side: 8192, area: 67108864 },
+        { side: 4096, area: 16777216 }
+      ];
+    }
+
+    function cellForLimit(pieceCols, pieceRows, limit, preferred) {
+      let cell = Math.min(preferred, Math.floor(limit.side / pieceCols), Math.floor(limit.side / pieceRows));
+      if (!Number.isFinite(cell) || cell < 1) return 0;
+      while (cell > 1 && pieceCols * cell * pieceRows * cell > limit.area) cell -= 1;
+      if (pieceCols * cell > limit.side || pieceRows * cell > limit.side) return 0;
+      if (pieceCols * cell * pieceRows * cell > limit.area) return 0;
+      return cell;
+    }
+    const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+    const CODE_ZOOMS = [1, 1.5, 2, 3, 4, 6, 8, 12, 16, 20];
+
+    const GROUPS = [
+      { prefix: "A", name: "黄橙系", colors: ["#f9f4ca","#fefed8","#fffd98","#f8eb6b","#edd859","#f2af5e","#eb9059","#f9d95e","#ef9e66","#e68246","#f9dba5","#eda27a","#f6c374","#e5614a","#faef7b","#fefcaf","#fae47f","#f3c087","#ed8278","#f4d676","#f6e49c","#f4f490","#e1ccb9","#f7faad","#f8d68e","#f6c954"] },
+      { prefix: "B", name: "绿色系", colors: ["#e8eb5c","#8cee65","#b2f58b","#81dd54","#71de67","#88e1ab","#60ad83","#499a57","#32513f","#a2d0c3","#607238","#336a43","#d0e88a","#b9e761","#374e31","#cdeba3","#a0b04d","#e8f069","#58b78d","#ccedce","#34666d","#1a3c3e","#313b20","#effaac","#5c7f6b","#887a3d","#d0dfb4","#afe3bd","#cbe06b","#e7fbbc","#bce49b","#9daa64"] },
+      { prefix: "C", name: "蓝青系", colors: ["#ebfeeb","#bbf6fa","#addff8","#71c0eb","#4da7e5","#67a8e8","#4776c8","#2750bc","#364cc4","#65b7df","#68d4d4","#21324e","#d4e4fd","#defcfc","#5bc1c3","#29539d","#61d2f2","#1e2e3d","#41849e","#346db0","#c5dff8","#7bb1bb","#cde1f9","#8ec2f1","#b3e4e1","#5daad4","#d4e0f8","#becdea","#384687"] },
+      { prefix: "D", name: "紫色系", colors: ["#b0b5ed","#868ed7","#3351a7","#1c2783","#aa4bbf","#a17dd7","#7d57ae","#dfd3f9","#cfbbf0","#321d44","#b5b9dc","#d69bd3","#aa2290","#783094","#2d218f","#e3e1ec","#c8d4ee","#9a61c0","#d3c6d0","#8e3ba3","#941d9f","#333697","#e5dcf9","#7886de","#474fcc","#dac1f8"] },
+      { prefix: "E", name: "粉色系", colors: ["#f8d6cd","#f1c3df","#f3bae3","#d26b9a","#dd5ea1","#de4d76","#a2466f","#f8dce8","#d877c4","#c2448d","#f4ddd5","#e796c1","#a4226a","#f6d2ba","#f0c9cc","#fbf2eb","#f9e2ea","#f4c9dd","#efbed3","#d7c6d0","#b79ea1","#ad86a1","#907c88","#dabfe2"] },
+      { prefix: "F", name: "红色系", colors: ["#ee9a80","#eb4b4b","#e4564c","#e44146","#d52f3d","#883d37","#89263a","#b02431","#d1707b","#7f4927","#50251f","#ea5c6c","#d76753","#efacb3","#bf282d","#f5c3a8","#dd9e7f","#cc7f55","#b34a4f","#c0958f","#ebb8c9","#f4bfcf","#e7846d","#da9dac","#d35654"] },
+      { prefix: "G", name: "棕橙系", colors: ["#f7e1d3","#f3c6b1","#ecc3a7","#dab58b","#e0b25c","#dd9e3f","#935d43","#6d3e38","#dfb585","#ce8e4e","#dbc795","#edc796","#aa7651","#87614e","#fcfae3","#eddcbe","#74534c","#fae6ce","#d87e42","#9a462a","#ae875e"] },
+      { prefix: "H", name: "中性色系", colors: ["#fdfbfe","#ffffff","#b7b2b9","#87848b","#484651","#302c2d","#000000","#e6d9e0","#ececec","#ede9ea","#cfcfd9","#fcf5ed","#f4edd3","#d1d6d0","#9ba7a7","#1e1614","#f1edec","#fcfcf2","#f5efe3","#959fa1","#fffbe0","#cbcbd5","#9a9d96"] },
+      { prefix: "M", name: "灰棕系", colors: ["#bfc7b8","#8fa189","#6d7b7b","#e2d3be","#cfcbb0","#aea886","#b1a599","#ab8183","#9f876d","#c1b4bb","#98788f","#5f4544","#c6926d","#b57460","#777b7a"] }
+    ];
+
+    function contrastInk(r, g, b) {
+      const lin = (v) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      const lum = (rr, gg, bb) => 0.2126 * lin(rr) + 0.7152 * lin(gg) + 0.0722 * lin(bb);
+      const ratio = (ir, ig, ib) => {
+        const high = Math.max(lum(r, g, b), lum(ir, ig, ib));
+        const low = Math.min(lum(r, g, b), lum(ir, ig, ib));
+        return (high + 0.05) / (low + 0.05);
+      };
+      return ratio(0x1c, 0x19, 0x15) >= ratio(0xff, 0xfd, 0xf8) ? "#1c1915" : "#fffdf8";
+    }
+
+    const PALETTE = GROUPS.flatMap((group) => group.colors.map((hex, index) => {
+      const r = Number.parseInt(hex.slice(1, 3), 16);
+      const g = Number.parseInt(hex.slice(3, 5), 16);
+      const b = Number.parseInt(hex.slice(5, 7), 16);
+      const ink = contrastInk(r, g, b);
+      return {
+        code: group.prefix + String(index + 1),
+        name: group.name + " " + (index + 1) + "号",
+        hex, r, g, b, ink,
+        inkR: Number.parseInt(ink.slice(1, 3), 16),
+        inkG: Number.parseInt(ink.slice(3, 5), 16),
+        inkB: Number.parseInt(ink.slice(5, 7), 16)
+      };
+    }));
+
+    let lut = null;
+    function ensureLut() {
+      if (lut) return;
+      lut = new Uint8Array(32 * 32 * 32);
+      for (let r = 0; r < 32; r += 1) {
+        const rr = r * 8 + 4;
+        for (let g = 0; g < 32; g += 1) {
+          const gg = g * 8 + 4;
+          for (let b = 0; b < 32; b += 1) {
+            const bb = b * 8 + 4;
+            let best = 0;
+            let score = Infinity;
+            for (let i = 0; i < PALETTE.length; i += 1) {
+              const color = PALETTE[i];
+              const d = (rr - color.r) ** 2 + (gg - color.g) ** 2 + (bb - color.b) ** 2;
+              if (d < score) { score = d; best = i; }
+            }
+            lut[(r << 10) | (g << 5) | b] = best;
+          }
+        }
+      }
+    }
+
+    function matchColor(r, g, b) {
+      return lut[((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3)];
+    }
+
+    const fileInput = document.querySelector("#file");
+    const drop = document.querySelector("#drop");
+    const original = document.querySelector("#original");
+    const fileName = document.querySelector("#fileName");
+    const pixelSize = document.querySelector("#pixelSize");
+    const status = document.querySelector("#status");
+    const colsInput = document.querySelector("#cols");
+    const rowsInput = document.querySelector("#rows");
+    const recognizeBtn = document.querySelector("#recognize");
+    const downloadBtn = document.querySelector("#download");
+    const recognitionDownloadBtn = document.querySelector("#downloadRecognition");
+    const sheetField = document.querySelector("#sheetField");
+    const sheetsInput = document.querySelector("#sheets");
+    const zoomBar = document.querySelector("#zoomBar");
+    const zoomOut = document.querySelector("#zoomOut");
+    const zoomIn = document.querySelector("#zoomIn");
+    const zoomLabel = document.querySelector("#zoomLabel");
+    const summary = document.querySelector("#summary");
+    const stage = document.querySelector("#stage");
+    const legend = document.querySelector("#legend");
+    const gridToggle = document.querySelector("#grid");
+
+    let image = null;
+    let pattern = null;
+    let view = "bead";
+    let job = 0;
+    let busy = false;
+    let beadZoomIndex = 2;
+    let codeZoomIndex = 0;
+    let dimensionDriver = "cols";
+
+    function setStatus(text, isError) {
+      status.textContent = text || "";
+      status.classList.toggle("is-error", !!isError);
+    }
+
+    function clampCount(value) {
+      return Math.min(MAX, Math.max(MIN, value));
+    }
+
+    function commitCount(input) {
+      const value = Number.parseInt(input.value, 10);
+      const next = Number.isFinite(value) ? clampCount(value) : Number(input.dataset.last || MIN);
+      input.value = String(next);
+      input.dataset.last = input.value;
+      return next;
+    }
+
+    function planGrid(img, userCols, userRows, driver = "cols") {
+      if (driver === "rows") {
+        const cols = clampCount(Math.round(userRows * img.naturalWidth / img.naturalHeight));
+        return { cols, rows: userRows, contentRows: userRows, whiteRows: 0 };
+      }
+      let cols = userCols;
+      let contentRows = Math.max(1, Math.round(cols * img.naturalHeight / img.naturalWidth));
+      if (contentRows > MAX) {
+        cols = Math.max(MIN, Math.min(MAX, Math.round(MAX * img.naturalWidth / img.naturalHeight)));
+        contentRows = Math.max(1, Math.min(MAX, Math.round(cols * img.naturalHeight / img.naturalWidth)));
+      }
+      const rows = Math.min(MAX, Math.max(userRows, contentRows));
+      return { cols, rows, contentRows, whiteRows: rows - contentRows };
+    }
+
+    function syncDimensions(input) {
+      if (!image) return;
+      const value = Number.parseInt(input.value, 10);
+      if (!Number.isFinite(value) || value < MIN || value > MAX) return;
+      dimensionDriver = input === colsInput ? "cols" : "rows";
+      const other = input === colsInput ? rowsInput : colsInput;
+      const ratio = input === colsInput
+        ? image.naturalHeight / image.naturalWidth
+        : image.naturalWidth / image.naturalHeight;
+      other.value = String(clampCount(Math.round(value * ratio)));
+      input.dataset.last = input.value;
+      other.dataset.last = other.value;
+    }
+
+    function isCodeLike() {
+      return view === "code" || view === "edge";
+    }
+
+    function codeCellSize(viewW, viewH) {
+      if (!pattern) return 22;
+      const fit = Math.max(1, Math.min((viewW - 16) / pattern.cols, (viewH - 16) / pattern.rows));
+      return fit * CODE_ZOOMS[codeZoomIndex];
+    }
+
+    function updateZoomControls() {
+      const canZoom = (view === "bead" || isCodeLike()) && !!pattern && !busy;
+      const list = isCodeLike() ? CODE_ZOOMS : ZOOMS;
+      const index = isCodeLike() ? codeZoomIndex : beadZoomIndex;
+      zoomBar.hidden = view === "source";
+      zoomOut.disabled = !canZoom || index === 0;
+      zoomIn.disabled = !canZoom || index === list.length - 1;
+      zoomLabel.textContent = isCodeLike() && index === 0 ? "完整" : Math.round(list[index] * 100) + "%";
+    }
+
+    function rememberCodeAnchor() {
+      const scroll = stage.querySelector(".code-scroll");
+      if (!scroll || !pattern || !isCodeLike()) return;
+      const cell = codeCellSize(scroll.clientWidth, scroll.clientHeight);
+      pattern.anchor = {
+        col: (scroll.scrollLeft + scroll.clientWidth / 2) / cell,
+        row: (scroll.scrollTop + scroll.clientHeight / 2) / cell
+      };
+    }
+
+    function setZoom(index) {
+      if (isCodeLike()) {
+        const next = Math.max(0, Math.min(CODE_ZOOMS.length - 1, index));
+        if (next === codeZoomIndex) return;
+        if (next === 0) pattern && (pattern.anchor = null);
+        else rememberCodeAnchor();
+        codeZoomIndex = next;
+        updateZoomControls();
+        if (pattern && pattern.redraw) pattern.redraw();
+        return;
+      }
+      const next = Math.max(0, Math.min(ZOOMS.length - 1, index));
+      if (next === beadZoomIndex) return;
+      beadZoomIndex = next;
+      updateZoomControls();
+      if (pattern) applyBeadZoom();
+    }
+
+    function bindDigits(input) {
+      input.addEventListener("input", () => {
+        const clean = input.value.replace(/\D/g, "").slice(0, 4);
+        if (input.value !== clean) input.value = clean;
+        syncDimensions(input);
+      });
+      input.addEventListener("blur", () => {
+        const previous = input.value;
+        commitCount(input);
+        if (input.value !== previous) syncDimensions(input);
+      });
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          commitCount(input);
+          syncDimensions(input);
+          recognize();
+        }
+      });
+    }
+    bindDigits(colsInput);
+    bindDigits(rowsInput);
+    sheetsInput.addEventListener("input", () => {
+      const clean = sheetsInput.value.replace(/\D/g, "").slice(0, 2);
+      if (sheetsInput.value !== clean) sheetsInput.value = clean;
+    });
+    sheetsInput.addEventListener("blur", () => readSheetCount());
+    sheetsInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") event.currentTarget.blur();
+    });
+
+    function emptyCopy(text) {
+      const node = document.createElement("p");
+      node.className = "empty-copy";
+      node.textContent = text;
+      return node;
+    }
+
+    function updateDownloadLabel() {
+      downloadBtn.textContent = view === "source" ? "下载原图" : view === "edge" ? "下载白边色号" : view === "code" ? "下载色号图" : "下载拼豆图";
+      downloadBtn.disabled = busy || (view === "source" ? !image : !pattern);
+      recognitionDownloadBtn.disabled = busy || !pattern;
+      sheetField.classList.toggle("is-on", isCodeLike());
+    }
+
+    drop.addEventListener("click", () => fileInput.click());
+    drop.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") fileInput.click();
+    });
+    ["dragenter", "dragover"].forEach((name) => drop.addEventListener(name, (event) => {
+      event.preventDefault();
+      drop.classList.add("is-hot");
+    }));
+    ["dragleave", "drop"].forEach((name) => drop.addEventListener(name, (event) => {
+      event.preventDefault();
+      drop.classList.remove("is-hot");
+    }));
+    drop.addEventListener("drop", (event) => {
+      const file = event.dataTransfer.files && event.dataTransfer.files[0];
+      if (file) loadFile(file);
+    });
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (file) loadFile(file);
+      fileInput.value = "";
+    });
+
+    function loadFile(file) {
+      if (file.type && !/^image\/(png|jpeg|webp)$/.test(file.type)) {
+        setStatus("请选择 PNG、JPG 或 WebP。", true);
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const next = new Image();
+      next.onload = () => {
+        if (image && String(image.src).startsWith("blob:")) URL.revokeObjectURL(image.src);
+        image = next;
+        image.fileName = file.name;
+        original.src = url;
+        original.style.display = "block";
+        drop.style.display = "none";
+        fileName.textContent = file.name;
+        pixelSize.textContent = next.naturalWidth + " × " + next.naturalHeight + " px";
+        colsInput.value = "52";
+        syncDimensions(colsInput);
+        recognizeBtn.disabled = false;
+        setStatus("");
+        recognize();
+      };
+      next.onerror = () => {
+        URL.revokeObjectURL(url);
+        setStatus("这张图片无法打开，请换一张 PNG、JPG 或 WebP。", true);
+      };
+      next.src = url;
+    }
+
+    recognizeBtn.addEventListener("click", recognize);
+    zoomOut.addEventListener("click", () => setZoom((isCodeLike() ? codeZoomIndex : beadZoomIndex) - 1));
+    zoomIn.addEventListener("click", () => setZoom((isCodeLike() ? codeZoomIndex : beadZoomIndex) + 1));
+    stage.addEventListener("wheel", (event) => {
+      if (view === "source" || !pattern || (!event.ctrlKey && !event.metaKey)) return;
+      event.preventDefault();
+      const index = isCodeLike() ? codeZoomIndex : beadZoomIndex;
+      setZoom(index + (event.deltaY > 0 ? -1 : 1));
+    }, { passive: false });
+    gridToggle.addEventListener("change", () => {
+      if (isCodeLike() && pattern && pattern.redraw) pattern.redraw();
+      else if (pattern || view === "source") paint();
+    });
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => {
+        view = button.dataset.view;
+        document.querySelectorAll("[data-view]").forEach((item) => {
+          const active = item === button;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        paint();
+      });
+    });
+
+    async function recognize() {
+      if (!image) {
+        setStatus("请先上传原图。", true);
+        return;
+      }
+      const requestedRows = commitCount(rowsInput);
+      const plan = planGrid(image, commitCount(colsInput), requestedRows, dimensionDriver);
+      colsInput.value = String(plan.cols);
+      rowsInput.value = String(plan.rows);
+      const cols = plan.cols;
+      const rows = plan.rows;
+      codeZoomIndex = 0;
+      const current = ++job;
+      busy = true;
+      recognizeBtn.disabled = true;
+      updateDownloadLabel();
+      setStatus("正在按 " + cols + " × " + rows + " 识别…");
+      try {
+        ensureLut();
+        const ids = await sampleCells(image, cols, rows, plan.contentRows, current);
+        if (current !== job) return;
+        pattern = { ids, cols, rows, contentRows: plan.contentRows, whiteRows: plan.whiteRows };
+        summarize(pattern);
+        summary.textContent = plan.whiteRows
+          ? "横向 " + cols + " × 纵向 " + rows + "。原图按比例占 " + cols + " × " + plan.contentRows + "，下方 " + plan.whiteRows + " 行是白色背景。"
+          : "横向 " + cols + " × 纵向 " + rows + "，与原图比例一致。";
+        setStatus(requestedRows < plan.contentRows ? "纵向已加到 " + rows + "，否则会压扁原图。" : "色号图先显示完整图，放大后可以看清每一格。");
+        paint();
+      } catch (error) {
+        if (current !== job) return;
+        setStatus(error.message || "识别失败，请换一张图片。", true);
+      } finally {
+        if (current === job) {
+          busy = false;
+          recognizeBtn.disabled = !image;
+          updateDownloadLabel();
+          updateZoomControls();
+        }
+      }
+    }
+
+    function pause() {
+      return new Promise((resolve) => window.setTimeout(resolve, 0));
+    }
+
+    async function sampleCells(source, cols, rows, contentRows, current) {
+      const sample = Math.max(2, Math.min(5, Math.floor(1600 / Math.max(cols, rows))));
+      const canvas = document.createElement("canvas");
+      canvas.width = cols * sample;
+      canvas.height = rows * sample;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) throw new Error("当前浏览器无法读取图片像素。");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      const scale = Math.min(canvas.width / source.naturalWidth, contentRows * sample / source.naturalHeight);
+      const drawWidth = source.naturalWidth * scale;
+      const drawHeight = source.naturalHeight * scale;
+      ctx.drawImage(source, (canvas.width - drawWidth) / 2, 0, drawWidth, drawHeight);
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const ids = new Int16Array(cols * rows);
+      ids.fill(-1);
+      const center = Math.floor(sample / 2);
+      for (let row = 0; row < rows; row += 1) {
+        for (let col = 0; col < cols; col += 1) {
+          let red = 0, green = 0, blue = 0, alphaWeight = 0, weightTotal = 0;
+          for (let dy = 0; dy < sample; dy += 1) {
+            for (let dx = 0; dx < sample; dx += 1) {
+              const index = ((row * sample + dy) * canvas.width + col * sample + dx) * 4;
+              const alpha = pixels[index + 3];
+              if (alpha < 12) continue;
+              const extra = (dx === center && dy === center ? 5 : 0) + (Math.abs(dx - center) <= 1 && Math.abs(dy - center) <= 1 ? 1 : 0);
+              const weight = (1 + extra) * alpha / 255;
+              red += pixels[index] * weight;
+              green += pixels[index + 1] * weight;
+              blue += pixels[index + 2] * weight;
+              alphaWeight += weight;
+              weightTotal += 1 + extra;
+            }
+          }
+          if (alphaWeight <= 0) continue;
+          const alpha = Math.min(255, Math.round(255 * alphaWeight / Math.max(1, weightTotal)));
+          if (alpha < 24) continue;
+          ids[row * cols + col] = matchColor(Math.round(red / alphaWeight), Math.round(green / alphaWeight), Math.round(blue / alphaWeight));
+        }
+        if (row % 24 === 23) {
+          if (current !== job) return ids;
+          setStatus("正在识别 " + (row + 1) + " / " + rows + " 行…");
+          await pause();
+        }
+      }
+      return ids;
+    }
+
+    function summarize(data) {
+      const counts = new Map();
+      let blanks = 0;
+      for (let i = 0; i < data.ids.length; i += 1) {
+        const id = data.ids[i];
+        if (id < 0) blanks += 1;
+        else counts.set(id, (counts.get(id) || 0) + 1);
+      }
+      data.blanks = blanks;
+      data.usage = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+    }
+
+    function renderLegend(data) {
+      legend.replaceChildren();
+      if (!data || view === "source") return;
+      for (const [id, count] of data.usage) {
+        const color = PALETTE[id];
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.title = color.name;
+        const swatch = document.createElement("i");
+        swatch.style.background = color.hex;
+        const code = document.createElement("b");
+        code.textContent = color.code;
+        const qty = document.createElement("small");
+        qty.textContent = String(count);
+        chip.append(swatch, code, qty);
+        legend.append(chip);
+      }
+    }
+
+    function stopCodeWatch() {
+      if (!pattern || !pattern.onResize) return;
+      window.removeEventListener("resize", pattern.onResize);
+      pattern.onResize = null;
+      pattern.redraw = null;
+    }
+
+    function paint() {
+      if (!isCodeLike()) stopCodeWatch();
+      stage.classList.toggle("is-code", isCodeLike() && !!pattern);
+      stage.classList.toggle("is-bead", view === "bead" && !!pattern);
+      if (view === "source") {
+        if (pattern) pattern.redraw = null;
+        if (!image) stage.replaceChildren(emptyCopy("上传原图后可以在这里查看。"));
+        else {
+          const img = document.createElement("img");
+          img.className = "stage-original";
+          img.alt = "原图";
+          img.src = image.src;
+          stage.replaceChildren(img);
+        }
+      } else if (!pattern) {
+        stage.replaceChildren(emptyCopy(view === "edge" ? "先点识别，再查看带白边的色号图。" : view === "code" ? "先点识别，再查看每一格的色号。" : "先点识别，再查看拼豆图。"));
+      } else if (view === "bead") {
+        pattern.redraw = null;
+        stage.replaceChildren(renderBeadPreview(pattern, gridToggle.checked));
+      } else {
+        mountCodeView(pattern);
+      }
+      renderLegend(pattern);
+      updateDownloadLabel();
+      updateZoomControls();
+    }
+
+    function beadBaseWidth(canvas) {
+      return Math.min(720, Math.max(280, canvas.width));
+    }
+
+    function applyBeadZoom() {
+      const canvas = stage.querySelector("canvas.bead-canvas");
+      if (!canvas) return;
+      const base = Number(canvas.dataset.base) || beadBaseWidth(canvas);
+      canvas.style.width = Math.round(base * ZOOMS[beadZoomIndex]) + "px";
+    }
+
+    function renderBeadPreview(data, showGrid) {
+      const cell = Math.max(1, Math.min(12, Math.floor(1400 / Math.max(data.cols, data.rows))));
+      const canvas = drawBeadCanvas(data, 0, 0, data.cols, data.rows, cell, showGrid && cell >= 5);
+      canvas.className = "bead-canvas";
+      canvas.dataset.base = String(beadBaseWidth(canvas));
+      canvas.style.width = Math.round(Number(canvas.dataset.base) * ZOOMS[beadZoomIndex]) + "px";
+      return canvas;
+    }
+
+    function drawBeadCanvas(data, col0, row0, colCount, rowCount, cell, showGrid) {
+      const small = document.createElement("canvas");
+      small.width = colCount;
+      small.height = rowCount;
+      const imageData = small.getContext("2d").createImageData(colCount, rowCount);
+      const pixels = imageData.data;
+      for (let row = 0; row < rowCount; row += 1) {
+        for (let col = 0; col < colCount; col += 1) {
+          const id = data.ids[(row0 + row) * data.cols + col0 + col];
+          const offset = (row * colCount + col) * 4;
+          const color = id < 0 ? null : PALETTE[id];
+          pixels[offset] = color ? color.r : 255;
+          pixels[offset + 1] = color ? color.g : 255;
+          pixels[offset + 2] = color ? color.b : 255;
+          pixels[offset + 3] = 255;
+        }
+      }
+      small.getContext("2d").putImageData(imageData, 0, 0);
+      const width = colCount * cell;
+      const height = rowCount * cell;
+      const canvas = document.createElement("canvas");
+      try {
+        canvas.width = width;
+        canvas.height = height;
+      } catch (error) {
+        throw LimitError();
+      }
+      if (canvas.width !== width || canvas.height !== height) throw LimitError();
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw LimitError();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+      if (showGrid) strokeGrid(ctx, colCount, rowCount, cell, canvas.width, canvas.height);
+      return canvas;
+    }
+
+    function strokeGrid(ctx, cols, rows, cell, width, height) {
+      ctx.fillStyle = "#1c1915";
+      for (let col = 0; col <= cols; col += 1) {
+        ctx.fillRect(Math.min(width - 1, col * cell), 0, 1, height);
+      }
+      for (let row = 0; row <= rows; row += 1) {
+        ctx.fillRect(0, Math.min(height - 1, row * cell), width, 1);
+      }
+    }
+
+    function mountCodeView(data) {
+      const frame = document.createElement("div");
+      frame.className = "code-frame";
+      const scroll = document.createElement("div");
+      scroll.className = "code-scroll";
+      const spacer = document.createElement("div");
+      const canvas = document.createElement("canvas");
+      canvas.className = "code-overlay";
+      scroll.append(spacer);
+      frame.append(scroll, canvas);
+      stage.replaceChildren(frame);
+      frame.style.width = Math.max(320, stage.clientWidth) + "px";
+      let scheduled = false;
+      const draw = () => {
+        scheduled = false;
+        const viewW = scroll.clientWidth;
+        const viewH = scroll.clientHeight;
+        if (!frame.isConnected || !viewW || !viewH) {
+          if (frame.isConnected) window.requestAnimationFrame(requestDraw);
+          return;
+        }
+        const cell = codeCellSize(viewW, viewH);
+        const fullW = data.cols * cell;
+        const fullH = data.rows * cell;
+        const padX = Math.max(8, (viewW - fullW) / 2);
+        const padY = Math.max(8, (viewH - fullH) / 2);
+        spacer.style.width = Math.max(viewW, fullW + padX * 2) + "px";
+        spacer.style.height = Math.max(viewH, fullH + padY * 2) + "px";
+        if (codeZoomIndex === 0) {
+          scroll.scrollLeft = 0;
+          scroll.scrollTop = 0;
+        } else if (data.anchor) {
+          const anchor = data.anchor;
+          data.anchor = null;
+          scroll.scrollLeft = anchor.col * cell - viewW / 2;
+          scroll.scrollTop = anchor.row * cell - viewH / 2;
+        }
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        canvas.style.width = viewW + "px";
+        canvas.style.height = viewH + "px";
+        canvas.width = Math.floor(viewW * dpr);
+        canvas.height = Math.floor(viewH * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, viewW, viewH);
+        const x0 = scroll.scrollLeft;
+        const y0 = scroll.scrollTop;
+        const col0 = Math.max(0, Math.floor((x0 - padX) / cell));
+        const row0 = Math.max(0, Math.floor((y0 - padY) / cell));
+        const col1 = Math.min(data.cols, Math.ceil((x0 + viewW - padX) / cell));
+        const row1 = Math.min(data.rows, Math.ceil((y0 + viewH - padY) / cell));
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "700 " + Math.max(8, Math.floor(cell * 0.36)) + "px Segoe UI, Microsoft YaHei, sans-serif";
+        for (let row = row0; row < row1; row += 1) {
+          for (let col = col0; col < col1; col += 1) {
+            const id = data.ids[row * data.cols + col];
+            if (id < 0) continue;
+            const color = PALETTE[id];
+            const x = padX + col * cell - x0;
+            const y = padY + row * cell - y0;
+            ctx.fillStyle = color.hex;
+            ctx.fillRect(x, y, cell, cell);
+            if (cell >= 14) {
+              ctx.fillStyle = color.ink;
+              ctx.fillText(color.code, x + cell / 2, y + cell / 2 + 0.5);
+            }
+            if (view === "edge" && cell >= 8) {
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 1;
+              ctx.strokeRect(x + 0.5, y + 0.5, Math.max(1, cell - 1), Math.max(1, cell - 1));
+            }
+          }
+        }
+        if (view === "code" && gridToggle.checked && cell >= 12) {
+          ctx.strokeStyle = "rgba(28, 25, 21, 0.28)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let col = col0; col <= col1; col += 1) {
+            const x = padX + col * cell - x0 + 0.5;
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, viewH);
+          }
+          for (let row = row0; row <= row1; row += 1) {
+            const y = padY + row * cell - y0 + 0.5;
+            ctx.moveTo(0, y);
+            ctx.lineTo(viewW, y);
+          }
+          ctx.stroke();
+        }
+      };
+      const requestDraw = () => {
+        if (scheduled) return;
+        scheduled = true;
+        window.requestAnimationFrame(draw);
+      };
+      scroll.addEventListener("scroll", requestDraw, { passive: true });
+      if (data.onResize) window.removeEventListener("resize", data.onResize);
+      data.onResize = requestDraw;
+      window.addEventListener("resize", requestDraw);
+      data.redraw = requestDraw;
+      frame.getBoundingClientRect();
+      draw();
+    }
+
+    let saverUrl = "";
+    let pendingFile = null;
+    const saver = document.querySelector("#saver");
+    const saverImg = document.querySelector("#saverImg");
+    const saverText = document.querySelector("#saverText");
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
+    function showSaver(blob, filename) {
+      pendingFile = { blob, filename };
+      if (saverUrl) URL.revokeObjectURL(saverUrl);
+      saverUrl = "";
+      const imageFile = (blob.type || "").startsWith("image/");
+      saverText.textContent = imageFile
+        ? "图片已生成。点保存图片，或长按图片存到相册。"
+        : "文件已生成。点保存文件。";
+      document.querySelector("#saverSave").textContent = imageFile ? "保存图片" : "保存文件";
+      if (imageFile) {
+        saverUrl = URL.createObjectURL(blob);
+        saverImg.src = saverUrl;
+        saverImg.hidden = false;
+      } else {
+        saverImg.removeAttribute("src");
+        saverImg.hidden = true;
+      }
+      saver.hidden = false;
+    }
+
+    function hideSaver() {
+      saver.hidden = true;
+      pendingFile = null;
+      if (saverUrl) URL.revokeObjectURL(saverUrl);
+      saverUrl = "";
+      saverImg.removeAttribute("src");
+    }
+
+    function handoff(blob, filename, hint) {
+      const manual = isIOS() || /MicroMessenger|QQ\/|AlipayClient|Weibo/i.test(navigator.userAgent || "");
+      if (isHandheld()) {
+        showSaver(blob, filename);
+        if (hint) saverText.textContent = hint;
+      }
+      if (!manual) downloadBlob(blob, filename);
+    }
+
+    async function canvasToPng(canvas) {
+      const area = canvas.width * canvas.height;
+      let blob = null;
+      try {
+        if (typeof canvas.toBlob === "function") {
+          blob = await new Promise((resolve) => canvas.toBlob((value) => resolve(value), "image/png"));
+        }
+      } catch (error) {
+        blob = null;
+      }
+      if ((!blob || blob.size < 32) && area <= 1024 * 1024 && typeof canvas.toDataURL === "function") {
+        try {
+          const dataUrl = canvas.toDataURL("image/png");
+          const comma = dataUrl.indexOf(",");
+          if (comma > 0) {
+            const binary = atob(dataUrl.slice(comma + 1));
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+            blob = new Blob([bytes], { type: "image/png" });
+          }
+        } catch (error) {
+          blob = null;
+        }
+      }
+      canvas.width = 1;
+      canvas.height = 1;
+      if (!blob || blob.size < 32) throw LimitError();
+      return blob;
+    }
+
+    downloadBtn.addEventListener("click", async () => {
+      if (busy) return;
+      try {
+        busy = true;
+        updateDownloadLabel();
+        if (view === "source") {
+          if (!image) return;
+          const blob = await fetch(image.src).then((response) => response.blob());
+          handoff(blob, image.fileName || "原图.png");
+          setStatus("");
+          return;
+        }
+        if (!pattern) return;
+        if (view === "bead") {
+          setStatus("正在生成拼豆图…");
+          await exportBead(pattern, gridToggle.checked);
+        } else {
+          const note = await exportCodes(pattern, view === "code" && gridToggle.checked, view === "edge", readSheetCount());
+          setStatus(note || "");
+          return;
+        }
+        setStatus("");
+      } catch (error) {
+        setStatus(error.message || "下载失败。", true);
+      } finally {
+        busy = false;
+        updateDownloadLabel();
+      }
+    });
+
+    recognitionDownloadBtn.addEventListener("click", async () => {
+      if (busy || !pattern) return;
+      try {
+        busy = true;
+        updateDownloadLabel();
+        const cell = fullSheetCell(pattern.cols, pattern.rows);
+        const blob = await encodeFullSheet(pattern, false, false, cell, true);
+        const note = "已生成整张软件识别图：横向 " + pattern.cols + " × 纵向 " + pattern.rows + "，每格 " + cell + " 像素，每个色格内均标注对应色号。请保存原图后导入识别软件。";
+        handoff(blob, "软件识别图-" + pattern.cols + "x" + pattern.rows + "-" + cell + "px.png", note);
+        setStatus(note);
+      } catch (error) {
+        setStatus(error.message || "软件识别图生成失败。", true);
+      } finally {
+        busy = false;
+        updateDownloadLabel();
+      }
+    });
+
+    function readSheetCount() {
+      const value = Number.parseInt(sheetsInput.value, 10);
+      const next = Number.isFinite(value) ? Math.min(24, Math.max(1, value)) : 1;
+      sheetsInput.value = String(next);
+      sheetsInput.dataset.last = sheetsInput.value;
+      return next;
+    }
+
+    function sheetLayout(count, cols, rows) {
+      if (count <= 1) return { tilesX: 1, tilesY: 1 };
+      let tilesX = count;
+      let tilesY = 1;
+      let best = Infinity;
+      for (let y = 1; y <= count; y += 1) {
+        if (count % y !== 0) continue;
+        const x = count / y;
+        const pieceAspect = (cols / x) / Math.max(1, rows / y);
+        const score = Math.abs(Math.log(pieceAspect / Math.max(0.01, cols / Math.max(1, rows))));
+        if (score < best) {
+          best = score;
+          tilesX = x;
+          tilesY = y;
+        }
+      }
+      return { tilesX, tilesY };
+    }
+
+    function fullSheetCell(cols, rows) {
+      const long = Math.max(cols, rows);
+      let cell = 72;
+      while (long * cell < 5120 && cell < 160) cell += 1;
+      if (long * cell > 12288) cell = Math.max(36, Math.floor(12288 / long));
+      return cell;
+    }
+
+    function borderPad(cell, whiteBorder) {
+      if (!whiteBorder || cell < 12) return 0;
+      return 2;
+    }
+
+    function needsExactPng() {
+      return isHandheld();
+    }
+
+    async function exportBead(data, showGrid) {
+      let lastCell = -1;
+      for (const limit of exportLimits()) {
+        const cell = cellForLimit(data.cols, data.rows, limit, 10);
+        if (cell < 2 || cell === lastCell) continue;
+        lastCell = cell;
+        try {
+          let blob;
+          if (needsExactPng()) {
+            const painted = await paintBeadPixels(data, 0, 0, data.cols, data.rows, cell, showGrid && cell >= 4);
+            blob = await pixelsToPng(painted.width, painted.height, painted.data);
+          } else {
+            const canvas = drawBeadCanvas(data, 0, 0, data.cols, data.rows, cell, showGrid && cell >= 4);
+            blob = await canvasToPng(canvas);
+          }
+          handoff(blob, "拼豆图-" + data.cols + "x" + data.rows + ".png");
+          return;
+        } catch (error) {
+          if (!isLimit(error)) throw error;
+          setStatus("这张图太大，正在改成更小的格子再试…");
+          await pause();
+        }
+      }
+      throw new Error("图片生成失败。请减少格子数后再试。");
+    }
+
+    async function renderCodeFiles(data, showGrid, whiteBorder, tilesX, tilesY, pieceCols, pieceRows, cell) {
+      const total = tilesX * tilesY;
+      const files = [];
+      for (let ty = 0; ty < tilesY; ty += 1) {
+        for (let tx = 0; tx < tilesX; tx += 1) {
+          const index = ty * tilesX + tx + 1;
+          setStatus(total === 1 ? (whiteBorder ? "正在绘制整张白边色号…" : "正在绘制整张色号…") : "正在绘制第 " + index + " / " + total + " 张…");
+          await pause();
+          const col0 = tx * pieceCols;
+          const row0 = ty * pieceRows;
+          const colCount = Math.min(pieceCols, data.cols - col0);
+          const rowCount = Math.min(pieceRows, data.rows - row0);
+          let blob;
+          if (needsExactPng()) {
+            const painted = await paintCodePixels(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell);
+            blob = await pixelsToPng(painted.width, painted.height, painted.data);
+          } else {
+            const canvas = await renderCodeTile(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell);
+            blob = await canvasToPng(canvas);
+          }
+          const prefix = whiteBorder ? "白边色号-" : "色号-";
+          const name = total === 1
+            ? prefix + data.cols + "x" + data.rows + "-" + cell + "px.png"
+            : prefix + (ty + 1) + "-" + (tx + 1) + "-" + cell + "px.png";
+          files.push({ name, data: new Uint8Array(await blob.arrayBuffer()) });
+          await pause();
+        }
+      }
+      return files;
+    }
+
+    async function exportCodes(data, showGrid, whiteBorder, requestedSheets) {
+      if (needsExactPng() && requestedSheets <= 1) {
+        const cell = fullSheetCell(data.cols, data.rows);
+        const blob = await encodeFullSheet(data, showGrid, whiteBorder, cell);
+        const note = "已下载一整张，每格 " + cell + " 像素。" + (whiteBorder ? "白边只有细边，颜色和色号都在格子里面。" : "格子里有颜色和色号。") + "在相册里打开后可以放大看清。";
+        const prefix = whiteBorder ? "白边色号-" : "色号-";
+        handoff(blob, prefix + data.cols + "x" + data.rows + "-" + cell + "px.png", note);
+        return note;
+      }
+      const layout = sheetLayout(requestedSheets, data.cols, data.rows);
+      const tilesX = layout.tilesX;
+      const tilesY = layout.tilesY;
+      const total = tilesX * tilesY;
+      const pieceCols = Math.ceil(data.cols / tilesX);
+      const pieceRows = Math.ceil(data.rows / tilesY);
+      let lastCell = -1;
+      for (const limit of exportLimits()) {
+        const cell = cellForLimit(pieceCols, pieceRows, limit, needsExactPng() ? 96 : EXPORT_CELL);
+        if (cell < 4 || cell === lastCell) continue;
+        lastCell = cell;
+        try {
+          const files = await renderCodeFiles(data, showGrid, whiteBorder, tilesX, tilesY, pieceCols, pieceRows, cell);
+          const splitNote = "";
+          const edgeNote = whiteBorder ? "白边只有细边，颜色和色号都在格子里面。" : "";
+          const saveHint = needsExactPng() ? (total === 1 ? "点保存图片，或长按图片存到相册，再放大查看。" : "点保存文件。") : "";
+          let note;
+          if (total === 1) note = "已生成一整张，每格 " + cell + " 像素。" + edgeNote + splitNote + saveHint;
+          else note = "已分成 " + tilesX + " × " + tilesY + " 共 " + total + " 张，每格 " + cell + " 像素。" + edgeNote + splitNote + saveHint;
+          if (files.length === 1) handoff(new Blob([files[0].data], { type: "image/png" }), files[0].name, note);
+          else handoff(buildZip(files), (whiteBorder ? "白边色号-" : "色号-") + data.cols + "x" + data.rows + "-" + total + "张.zip", note);
+          return note;
+        } catch (error) {
+          if (!isLimit(error)) throw error;
+          setStatus("这张图太大，正在改成更小的格子再试…");
+          await pause();
+        }
+      }
+      throw new Error("图片生成失败。请把下载张数调大，或减少格子数后再试。");
+    }
+
+    function fillRectPx(pixels, width, height, x, y, w, h, r, g, b) {
+      if (w <= 0 || h <= 0) return;
+      const x0 = x < 0 ? 0 : x;
+      const y0 = y < 0 ? 0 : y;
+      const x1 = x + w > width ? width : x + w;
+      const y1 = y + h > height ? height : y + h;
+      for (let yy = y0; yy < y1; yy += 1) {
+        let i = (yy * width + x0) * 4;
+        for (let xx = x0; xx < x1; xx += 1) {
+          pixels[i] = r;
+          pixels[i + 1] = g;
+          pixels[i + 2] = b;
+          pixels[i + 3] = 255;
+          i += 4;
+        }
+      }
+    }
+
+    function codeGlyphs(code) {
+      const narrow = code.length >= 3;
+      const gap = 1;
+      const glyphs = [];
+      let unitsW = 0;
+      for (let i = 0; i < code.length; i += 1) {
+        const rows = narrow && NARROW_DIGITS[code[i]] ? NARROW_DIGITS[code[i]] : CODE_GLYPHS[code[i]];
+        glyphs.push(rows);
+        unitsW += rows ? rows[0].length : 5;
+        if (i > 0) unitsW += gap;
+      }
+      return { narrow, gap, glyphs, unitsW };
+    }
+
+    function glyphScale(inner, unitsW, narrow) {
+      const maxH = Math.max(7, Math.floor(inner * 0.5));
+      const maxW = Math.max(unitsW, Math.floor(inner * (narrow ? 0.96 : 0.7)));
+      let scale = Math.floor(Math.min(maxW / unitsW, maxH / 7));
+      if (scale < 1) scale = 1;
+      return scale;
+    }
+
+    function paintGlyphs(pixels, width, height, code, left, top, inner, r, g, b) {
+      const layout = codeGlyphs(code);
+      const glyphH = 7;
+      const scale = glyphScale(inner, layout.unitsW, layout.narrow);
+      const drawnW = layout.unitsW * scale;
+      const drawnH = glyphH * scale;
+      let ox = left + Math.floor((inner - drawnW) / 2);
+      const oy = top + Math.floor((inner - drawnH) / 2);
+      const clipR = left + inner;
+      const clipB = top + inner;
+      for (let i = 0; i < layout.glyphs.length; i += 1) {
+        const rows = layout.glyphs[i];
+        const glyphW = rows ? rows[0].length : 5;
+        if (rows) {
+          for (let ry = 0; ry < rows.length; ry += 1) {
+            const bits = rows[ry];
+            for (let rx = 0; rx < bits.length; rx += 1) {
+              if (bits[rx] !== "1") continue;
+              const px = ox + rx * scale;
+              const py = oy + ry * scale;
+              const x0 = px < left ? left : px;
+              const y0 = py < top ? top : py;
+              const x1 = px + scale > clipR ? clipR : px + scale;
+              const y1 = py + scale > clipB ? clipB : py + scale;
+              fillRectPx(pixels, width, height, x0, y0, x1 - x0, y1 - y0, r, g, b);
+            }
+          }
+        }
+        ox += (glyphW + layout.gap) * scale;
+      }
+    }
+
+    function allocPixels(width, height) {
+      try {
+        const pixels = new Uint8ClampedArray(width * height * 4);
+        pixels.fill(255);
+        return pixels;
+      } catch (error) {
+        throw LimitError();
+      }
+    }
+
+    async function paintBeadPixels(data, col0, row0, colCount, rowCount, cell, showGrid) {
+      const width = colCount * cell;
+      const height = rowCount * cell;
+      const pixels = allocPixels(width, height);
+      for (let row = 0; row < rowCount; row += 1) {
+        for (let col = 0; col < colCount; col += 1) {
+          const id = data.ids[(row0 + row) * data.cols + col0 + col];
+          if (id < 0) continue;
+          const color = PALETTE[id];
+          fillRectPx(pixels, width, height, col * cell, row * cell, cell, cell, color.r, color.g, color.b);
+        }
+        if (row % 16 === 15) await pause();
+      }
+      if (showGrid) paintGridLines(pixels, width, height, colCount, rowCount, cell);
+      return { width, height, data: pixels };
+    }
+
+    async function paintCodePixels(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell) {
+      const width = colCount * cell;
+      const height = rowCount * cell;
+      const pixels = allocPixels(width, height);
+      const pad = borderPad(cell, whiteBorder);
+      for (let row = 0; row < rowCount; row += 1) {
+        for (let col = 0; col < colCount; col += 1) {
+          const id = data.ids[(row0 + row) * data.cols + col0 + col];
+          if (id < 0) continue;
+          const color = PALETTE[id];
+          const x = col * cell;
+          const y = row * cell;
+          const inner = Math.max(1, cell - pad * 2);
+          fillRectPx(pixels, width, height, x + pad, y + pad, inner, inner, color.r, color.g, color.b);
+          paintGlyphs(pixels, width, height, color.code, x + pad, y + pad, inner, color.inkR, color.inkG, color.inkB);
+        }
+        if (row % 8 === 7) await pause();
+      }
+      if (showGrid && !whiteBorder) paintGridLines(pixels, width, height, colCount, rowCount, cell);
+      return { width, height, data: pixels };
+    }
+
+    function paintGridLines(pixels, width, height, cols, rows, cell) {
+      for (let col = 0; col <= cols; col += 1) {
+        fillRectPx(pixels, width, height, Math.min(width - 1, col * cell), 0, 1, height, 28, 25, 21);
+      }
+      for (let row = 0; row <= rows; row += 1) {
+        fillRectPx(pixels, width, height, 0, Math.min(height - 1, row * cell), width, 1, 28, 25, 21);
+      }
+    }
+
+    function drawBitmapCode(ctx, code, left, top, inner, ink) {
+      const layout = codeGlyphs(code);
+      const glyphH = 7;
+      const scale = glyphScale(inner, layout.unitsW, layout.narrow);
+      const drawnW = layout.unitsW * scale;
+      const drawnH = glyphH * scale;
+      let x = left + Math.floor((inner - drawnW) / 2);
+      const y = top + Math.floor((inner - drawnH) / 2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(left, top, inner, inner);
+      ctx.clip();
+      ctx.fillStyle = ink;
+      for (let i = 0; i < layout.glyphs.length; i += 1) {
+        const rows = layout.glyphs[i];
+        const glyphW = rows ? rows[0].length : 5;
+        if (rows) {
+          for (let ry = 0; ry < rows.length; ry += 1) {
+            const bits = rows[ry];
+            for (let rx = 0; rx < bits.length; rx += 1) {
+              if (bits[rx] !== "1") continue;
+              let end = rx + 1;
+              while (end < bits.length && bits[end] === "1") end += 1;
+              ctx.fillRect(x + rx * scale, y + ry * scale, (end - rx) * scale, scale);
+              rx = end - 1;
+            }
+          }
+        }
+        x += (glyphW + layout.gap) * scale;
+      }
+      ctx.restore();
+    }
+
+    function stampCodeCell(ctx, x, y, cell, color, pad) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x, y, cell, cell);
+      const inner = Math.max(1, cell - pad * 2);
+      ctx.fillStyle = color.hex;
+      ctx.fillRect(x + pad, y + pad, inner, inner);
+      drawBitmapCode(ctx, color.code, x + pad, y + pad, inner, color.ink);
+    }
+
+    async function renderCodeTile(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell) {
+      const width = colCount * cell;
+      const height = rowCount * cell;
+      const canvas = document.createElement("canvas");
+      let ctx = null;
+      try {
+        canvas.width = width;
+        canvas.height = height;
+        ctx = canvas.getContext("2d", { alpha: false }) || canvas.getContext("2d");
+      } catch (error) {
+        throw LimitError();
+      }
+      if (!ctx || canvas.width !== width || canvas.height !== height) throw LimitError();
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const pad = borderPad(cell, whiteBorder);
+      for (let row = 0; row < rowCount; row += 1) {
+        for (let col = 0; col < colCount; col += 1) {
+          const id = data.ids[(row0 + row) * data.cols + col0 + col];
+          if (id < 0) continue;
+          stampCodeCell(ctx, col * cell, row * cell, cell, PALETTE[id], pad);
+        }
+        if (row % 8 === 7) await pause();
+      }
+      if (showGrid && !whiteBorder) strokeGrid(ctx, colCount, rowCount, cell, canvas.width, canvas.height);
+      return canvas;
+    }
+
+    const CRC_TABLE = (() => {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n += 1) {
+        let c = n;
+        for (let k = 0; k < 8; k += 1) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        table[n] = c >>> 0;
+      }
+      return table;
+    })();
+
+    function crc32(data) {
+      let c = 0xffffffff;
+      for (let i = 0; i < data.length; i += 1) c = CRC_TABLE[(c ^ data[i]) & 255] ^ (c >>> 8);
+      return (c ^ 0xffffffff) >>> 0;
+    }
+
+    function adler32(data) {
+      let s1 = 1;
+      let s2 = 0;
+      for (let i = 0; i < data.length; i += 1) {
+        s1 += data[i];
+        s2 += s1;
+        if ((i & 4095) === 4095) {
+          s1 %= 65521;
+          s2 %= 65521;
+        }
+      }
+      return (((s2 % 65521) << 16) | (s1 % 65521)) >>> 0;
+    }
+
+    function rgbScanlines(width, height, pixels) {
+      const raw = new Uint8Array(height * (width * 3 + 1));
+      let o = 0;
+      for (let y = 0; y < height; y += 1) {
+        raw[o++] = 0;
+        let i = y * width * 4;
+        for (let x = 0; x < width; x += 1) {
+          raw[o++] = pixels[i];
+          raw[o++] = pixels[i + 1];
+          raw[o++] = pixels[i + 2];
+          i += 4;
+        }
+      }
+      return raw;
+    }
+
+    function zlibStore(raw) {
+      const blocks = Math.max(1, Math.ceil(raw.length / 65535));
+      const out = new Uint8Array(6 + raw.length + blocks * 5);
+      out[0] = 0x78;
+      out[1] = 0x01;
+      let p = 2;
+      let offset = 0;
+      do {
+        const size = Math.min(65535, raw.length - offset);
+        const last = offset + size >= raw.length;
+        out[p++] = last ? 1 : 0;
+        out[p++] = size & 255;
+        out[p++] = (size >> 8) & 255;
+        const nlen = (~size) & 65535;
+        out[p++] = nlen & 255;
+        out[p++] = (nlen >> 8) & 255;
+        out.set(raw.subarray(offset, offset + size), p);
+        p += size;
+        offset += size;
+      } while (offset < raw.length);
+      const sum = adler32(raw);
+      out[p++] = (sum >>> 24) & 255;
+      out[p++] = (sum >>> 16) & 255;
+      out[p++] = (sum >>> 8) & 255;
+      out[p++] = sum & 255;
+      return out.subarray(0, p);
+    }
+
+    async function zlibWrap(raw) {
+      try {
+        if (typeof CompressionStream === "function") {
+          const stream = new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate"));
+          const deflated = new Uint8Array(await new Response(stream).arrayBuffer());
+          if (deflated.length >= 2 && deflated[0] === 0x78) return deflated;
+          const out = new Uint8Array(deflated.length + 6);
+          out[0] = 0x78;
+          out[1] = 0x9c;
+          out.set(deflated, 2);
+          const sum = adler32(raw);
+          out[out.length - 4] = (sum >>> 24) & 255;
+          out[out.length - 3] = (sum >>> 16) & 255;
+          out[out.length - 2] = (sum >>> 8) & 255;
+          out[out.length - 1] = sum & 255;
+          return out;
+        }
+      } catch (error) {}
+      return zlibStore(raw);
+    }
+
+    function pngChunk(type, data) {
+      const chunk = new Uint8Array(12 + data.length);
+      const view = new DataView(chunk.buffer);
+      view.setUint32(0, data.length);
+      chunk[4] = type.charCodeAt(0);
+      chunk[5] = type.charCodeAt(1);
+      chunk[6] = type.charCodeAt(2);
+      chunk[7] = type.charCodeAt(3);
+      chunk.set(data, 8);
+      view.setUint32(8 + data.length, crc32(chunk.subarray(4, 8 + data.length)));
+      return chunk;
+    }
+
+    function pngBlob(width, height, zlibBytes) {
+      const ihdr = new Uint8Array(13);
+      const view = new DataView(ihdr.buffer);
+      view.setUint32(0, width);
+      view.setUint32(4, height);
+      ihdr[8] = 8;
+      ihdr[9] = 2;
+      return new Blob([
+        Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]),
+        pngChunk("IHDR", ihdr),
+        pngChunk("sRGB", Uint8Array.of(0)),
+        pngChunk("IDAT", zlibBytes),
+        pngChunk("IEND", new Uint8Array(0))
+      ], { type: "image/png" });
+    }
+
+    async function pixelsToPng(width, height, pixels) {
+      const raw = rgbScanlines(width, height, pixels);
+      const zlibBytes = await zlibWrap(raw);
+      return pngBlob(width, height, zlibBytes);
+    }
+
+    function adlerAdd(state, data) {
+      let s1 = state.s1;
+      let s2 = state.s2;
+      for (let i = 0; i < data.length; i += 1) {
+        s1 += data[i];
+        s2 += s1;
+        if ((i & 4095) === 4095) {
+          s1 %= 65521;
+          s2 %= 65521;
+        }
+      }
+      state.s1 = s1 % 65521;
+      state.s2 = s2 % 65521;
+    }
+
+    async function encodeFullSheet(data, showGrid, whiteBorder, cell, withCodes = true) {
+      const width = data.cols * cell;
+      const height = data.rows * cell;
+      const paintRows = (row0, rowCount) => withCodes
+        ? paintCodePixels(data, 0, row0, data.cols, rowCount, showGrid, whiteBorder, cell)
+        : paintBeadPixels(data, 0, row0, data.cols, rowCount, cell, false);
+      if (typeof CompressionStream !== "function") {
+        const painted = await paintRows(0, data.rows);
+        return pixelsToPng(painted.width, painted.height, painted.data);
+      }
+      const stream = new CompressionStream("deflate");
+      const writer = stream.writable.getWriter();
+      const reader = stream.readable.getReader();
+      const chunks = [];
+      let failed = null;
+      const reading = (async () => {
+        try {
+          for (;;) {
+            const step = await reader.read();
+            if (step.done) break;
+            chunks.push(step.value);
+          }
+        } catch (error) {
+          failed = error;
+        }
+      })();
+      const adler = { s1: 1, s2: 0 };
+      const strip = Math.max(1, Math.min(48, Math.floor(700000 / Math.max(1, width))));
+      const label = withCodes ? (whiteBorder ? "白边色号" : "色号") : "软件识别图";
+      try {
+        for (let top = 0; top < data.rows; top += strip) {
+          if (failed) throw failed;
+          const count = Math.min(strip, data.rows - top);
+          setStatus("正在绘制整张" + label + " " + Math.min(data.rows, top + count) + " / " + data.rows + " 行…");
+          await pause();
+          const painted = await paintRows(top, count);
+          const raw = rgbScanlines(painted.width, painted.height, painted.data);
+          adlerAdd(adler, raw);
+          await writer.write(raw);
+        }
+        await writer.close();
+        await reading;
+        if (failed) throw failed;
+      } catch (error) {
+        await writer.abort(error).catch(() => {});
+        throw error;
+      }
+      let deflatedLen = 0;
+      for (const part of chunks) deflatedLen += part.length;
+      const combined = new Uint8Array(deflatedLen);
+      let offset = 0;
+      for (const part of chunks) {
+        combined.set(part, offset);
+        offset += part.length;
+      }
+      if (combined.length >= 2 && combined[0] === 0x78) return pngBlob(width, height, combined);
+      const zlibBytes = new Uint8Array(deflatedLen + 6);
+      zlibBytes[0] = 0x78;
+      zlibBytes[1] = 0x9c;
+      zlibBytes.set(combined, 2);
+      const sum = ((adler.s2 << 16) | adler.s1) >>> 0;
+      zlibBytes[zlibBytes.length - 4] = (sum >>> 24) & 255;
+      zlibBytes[zlibBytes.length - 3] = (sum >>> 16) & 255;
+      zlibBytes[zlibBytes.length - 2] = (sum >>> 8) & 255;
+      zlibBytes[zlibBytes.length - 1] = sum & 255;
+      return pngBlob(width, height, zlibBytes);
+    }
+
+    function buildZip(files) {
+      const encoder = new TextEncoder();
+      const locals = [];
+      const centrals = [];
+      let offset = 0;
+      for (const file of files) {
+        const name = encoder.encode(file.name);
+        const crc = crc32(file.data);
+        const local = new DataView(new ArrayBuffer(30 + name.length));
+        local.setUint32(0, 0x04034b50, true);
+        local.setUint16(4, 20, true);
+        local.setUint32(14, crc, true);
+        local.setUint32(18, file.data.length, true);
+        local.setUint32(22, file.data.length, true);
+        local.setUint16(26, name.length, true);
+        const localBytes = new Uint8Array(local.buffer);
+        localBytes.set(name, 30);
+        locals.push(localBytes, file.data);
+        const central = new DataView(new ArrayBuffer(46 + name.length));
+        central.setUint32(0, 0x02014b50, true);
+        central.setUint16(4, 20, true);
+        central.setUint16(6, 20, true);
+        central.setUint32(16, crc, true);
+        central.setUint32(20, file.data.length, true);
+        central.setUint32(24, file.data.length, true);
+        central.setUint16(28, name.length, true);
+        central.setUint32(42, offset, true);
+        const centralBytes = new Uint8Array(central.buffer);
+        centralBytes.set(name, 46);
+        centrals.push(centralBytes);
+        offset += localBytes.length + file.data.length;
+      }
+      let centralSize = 0;
+      for (const part of centrals) centralSize += part.length;
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true);
+      end.setUint16(8, files.length, true);
+      end.setUint16(10, files.length, true);
+      end.setUint32(12, centralSize, true);
+      end.setUint32(16, offset, true);
+      return new Blob([...locals, ...centrals, new Uint8Array(end.buffer)], { type: "application/zip" });
+    }
+
+    document.querySelector("#saverClose").addEventListener("click", hideSaver);
+    document.querySelector("#saverSave").addEventListener("click", async () => {
+      if (!pendingFile) return;
+      const blob = pendingFile.blob;
+      const filename = pendingFile.filename;
+      const file = new File([blob], filename, { type: blob.type || "application/octet-stream" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: filename });
+          return;
+        } catch (error) {
+          if (error && error.name === "AbortError") return;
+        }
+      }
+      if (!isIOS()) downloadBlob(blob, filename);
+      else setStatus("请长按上面的图片，选择存储到照片。");
+    });
+  </script>
+</body>
+</html>
