@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>格子图</title>
-  <meta name="description" content="上传图片，按自定义格数生成拼豆图和色号图。图片只在浏览器里处理，不会上传。" />
+  <meta name="description" content="上传图片，按自定义格数生成拼豆图和色号图。原照片只在浏览器里处理；主动生成分享链接时仅上传整张图纸。" />
   <style>
     :root {
       --paper: #f6f1e8;
@@ -66,11 +66,13 @@
 
     .layout {
       display: grid;
-      grid-template-columns: minmax(280px, 360px) 1fr;
+      grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
       gap: 22px;
       margin-top: 28px;
       align-items: start;
     }
+
+    .layout > *, .fields > *, .view-tabs > *, .meta > * { min-width: 0; max-width: 100%; }
 
     .panel {
       background: var(--panel);
@@ -99,7 +101,10 @@
 
     .original {
       display: none;
-      width: 100%;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      margin-inline: auto;
       max-height: 280px;
       object-fit: contain;
       border-radius: 12px;
@@ -108,6 +113,7 @@
 
     .meta {
       display: flex;
+      overflow-wrap: anywhere;
       justify-content: space-between;
       gap: 12px;
       margin-top: 12px;
@@ -115,16 +121,19 @@
       font-size: 13px;
     }
 
+    #fileName { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
+    #pixelSize { flex: 0 0 auto; white-space: nowrap; }
+
     .fields {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       gap: 10px;
       align-items: end;
     }
 
     .times { padding-bottom: 12px; color: var(--muted); font-size: 22px; }
 
-    label.dim { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+    label.dim { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13px; color: var(--muted); }
 
     input[type="text"] {
       width: 100%;
@@ -171,6 +180,9 @@
     .options, .actions { display: flex; flex-wrap: wrap; gap: 8px 14px; }
     .options { margin: 14px 0; font-size: 14px; }
     .options label { display: flex; gap: 6px; align-items: center; }
+    .options label[hidden] { display: none; }
+    #similarityManual { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+    #similarityRange { flex: 1 1 120px; min-width: 0; max-width: 100%; width: 120px; accent-color: var(--stamp); }
 
     button {
       height: 40px;
@@ -189,7 +201,7 @@
 
     .view-tabs {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 4px;
       margin-top: 14px;
       padding: 4px;
@@ -216,6 +228,10 @@
     .status.is-error { color: var(--stamp-dark); }
 
     .stage {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      grid-template-columns: minmax(0, 1fr);
       min-height: 420px;
       margin-top: 14px;
       border-radius: 14px;
@@ -249,6 +265,9 @@
     }
 
     .stage-original {
+      min-width: 0;
+      width: auto;
+      height: auto;
       max-width: 100%;
       max-height: 520px;
       object-fit: contain;
@@ -258,8 +277,8 @@
 
     .empty-copy { color: var(--muted); text-align: center; line-height: 1.6; }
 
-    .code-frame { position: relative; width: 100%; height: 520px; }
-    .code-scroll { height: 100%; overflow: auto; }
+    .code-frame { position: relative; width: 100%; min-width: 0; max-width: 100%; height: 520px; }
+    .code-scroll { width: 100%; min-width: 0; max-width: 100%; height: 100%; overflow: auto; }
     .code-overlay { position: absolute; left: 0; top: 0; pointer-events: none; }
 
     .legend {
@@ -324,7 +343,7 @@
     .chip small { color: var(--muted); }
 
     @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: minmax(0, 1fr); }
       header h1 { font-size: 32px; }
     }
 
@@ -337,7 +356,7 @@
     body.is-h5 header p { font-size: 13px; }
 
     body.is-h5 .layout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
       margin-top: 14px;
     }
@@ -353,6 +372,13 @@
     body.is-h5 .code-frame { height: min(62dvh, 520px); }
     body.is-h5 .stage-original { max-height: 360px; }
     body.is-h5 .legend { max-height: 96px; }
+    .share-box { min-width: 0; max-width: 100%; margin: 12px 0; }
+    .share-box[hidden] { display: none; }
+    .share-url-row { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+    .share-box .share-url-row input { flex: 1 1 180px; min-width: 0; width: 100%; max-width: 100%; height: 42px; font-size: 16px; }
+    body.is-h5 .share-box .share-url-row input { height: 42px; font-size: 16px; }
+    .share-url-row button { flex: 0 1 auto; max-width: 100%; height: auto; min-height: 42px; white-space: normal; }
+    .share-box p, #shareHint { overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
@@ -362,7 +388,7 @@
         <h1>格子图</h1>
         <button id="h5Switch" type="button" aria-pressed="false">切换到 H5</button>
       </div>
-      <p>上传原图，横向和纵向格数都可以自己填。原图按自身比例放在上方，多出来的高度用白色向下补上。色号图先显示完整图，再放大查看每一格的色号。图片只在你的浏览器里处理，不会上传到服务器。</p>
+      <p>上传原图，横向和纵向格数都可以自己填。原图按自身比例放在上方，多出来的高度用白色向下补上。色号图先显示完整图，再放大查看每一格的色号。原照片只在你的浏览器里处理；点击“生成分享链接”时，只上传生成的整张图纸。</p>
     </header>
     <div class="layout">
       <section class="panel source">
@@ -391,17 +417,39 @@
         </div>
         <p class="hint">修改横向或纵向格数，另一边会按原图比例自动计算（四舍五入）。</p>
         <div class="options">
+          <label><input id="autoColors" type="checkbox" checked /> 自动合并相近颜色</label>
+          <label>相似度
+            <select id="similarityMode" aria-label="相似度模式"><option value="auto">随格数自动</option><option value="manual">手动</option></select>
+          </label>
+          <label id="similarityManual" hidden>手动百分比
+            <input id="similarityRange" type="range" min="60" max="98" step="1" value="90" aria-label="滑动选择手动相似度百分比" disabled />
+            <input id="similarityPercent" type="number" min="60" max="98" step="1" value="90" style="width: 4.5em" aria-label="手动相似度百分比" disabled />%
+          </label>
+          <span id="similarityActual" role="status" aria-live="polite"></span>
           <label><input id="grid" type="checkbox" checked /> 画格线</label>
           <label id="sheetField" class="sheet-field">下载张数
             <input id="sheets" type="text" inputmode="numeric" value="1" aria-label="下载张数" data-last="1" />
           </label>
         </div>
+        <p id="colorSummary" class="hint" role="status" aria-live="polite"></p>
         <div class="actions">
           <button id="recognize" class="primary" type="button" disabled>识别</button>
           <button id="download" type="button" disabled>下载拼豆图</button>
           <button id="downloadRecognition" type="button" disabled>下载软件识别图</button>
+          <button id="shareGenerate" type="button" disabled>生成分享链接</button>
         </div>
         <p class="hint">软件识别图会在每个色格内标注对应色号，整张下载，格子大小一致。</p>
+        <p id="shareHint" class="hint">分享整张色号图（无网格），不上传原照片。持有链接的人可查看图纸，链接有效30天。</p>
+        <p id="shareStatus" class="hint" role="status" aria-live="polite"></p>
+        <div id="shareResult" class="share-box" hidden>
+          <label for="shareUrl">图纸原图链接</label>
+          <div class="share-url-row">
+            <input id="shareUrl" type="url" readonly aria-label="图纸原图链接" />
+            <button id="shareCopy" type="button">复制原图链接</button>
+          </div>
+          <p class="hint"><a id="sharePreview" target="_blank" rel="noopener noreferrer">打开图纸预览</a></p>
+          <p class="hint">可粘贴到支持图片链接的软件；拼个豆豆是否接受，请以实际导入结果为准。</p>
+        </div>
         <div class="view-tabs" role="tablist" aria-label="查看方式">
           <button type="button" data-view="source" role="tab">原图</button>
           <button type="button" data-view="bead" class="is-active" role="tab" aria-selected="true">拼豆图</button>
@@ -647,6 +695,14 @@
     const stage = document.querySelector("#stage");
     const legend = document.querySelector("#legend");
     const gridToggle = document.querySelector("#grid");
+    const autoColorsToggle = document.querySelector("#autoColors");
+    const similarityMode = document.querySelector("#similarityMode");
+    const similarityManual = document.querySelector("#similarityManual");
+    const similarityPercent = document.querySelector("#similarityPercent");
+    const similarityRange = document.querySelector("#similarityRange");
+    const similarityActual = document.querySelector("#similarityActual");
+    const colorSummary = document.querySelector("#colorSummary");
+    let imageLoadRevision = 0;
 
     let image = null;
     let pattern = null;
@@ -656,6 +712,172 @@
     let beadZoomIndex = 2;
     let codeZoomIndex = 0;
     let dimensionDriver = "cols";
+
+    const shareGenerateBtn = document.querySelector("#shareGenerate");
+    const shareResult = document.querySelector("#shareResult");
+    const shareUrlInput = document.querySelector("#shareUrl");
+    const sharePreview = document.querySelector("#sharePreview");
+    const shareStatus = document.querySelector("#shareStatus");
+    const shareHint = document.querySelector("#shareHint");
+    let shareRevision = 0;
+    let shareInputRevision = 0;
+    let sharePatternValid = false;
+    let shareTask = null;
+
+    function invalidateShare(needsRecognition = false) {
+      shareRevision += 1;
+      if (needsRecognition) {
+        shareInputRevision += 1;
+        sharePatternValid = false;
+      }
+      if (shareTask && shareTask.controller) shareTask.controller.abort();
+      shareResult.hidden = true;
+      shareUrlInput.value = "";
+      sharePreview.removeAttribute("href");
+      shareStatus.textContent = "";
+      updateDownloadLabel();
+    }
+
+    [colsInput, rowsInput].forEach((input) => {
+      input.addEventListener("input", () => invalidateShare(true));
+      input.addEventListener("blur", () => {
+        if (pattern && (Number(colsInput.value) !== pattern.cols || Number(rowsInput.value) !== pattern.rows)) invalidateShare(true);
+      });
+    });
+    function cancelPattern() {
+      invalidateShare(true);
+      job += 1;
+      // Detach the old share task: its finally must not release a newer job's busy state.
+      shareTask = null;
+      busy = false;
+      stopCodeWatch();
+      pattern = null;
+      summary.textContent = "";
+      colorSummary.textContent = "";
+      recognizeBtn.disabled = !image;
+      paint();
+    }
+
+    function updateSimilarity() {
+      const manual = similarityMode.value === "manual";
+      similarityManual.hidden = !manual;
+      similarityPercent.disabled = !manual || !autoColorsToggle.checked;
+      similarityRange.disabled = similarityPercent.disabled;
+      similarityRange.value = similarityPercent.value;
+      similarityMode.disabled = !autoColorsToggle.checked;
+      const plan = image
+        ? planGrid(image, Number(colsInput.value) || 52, Number(rowsInput.value) || 52, dimensionDriver)
+        : { cols: Number(colsInput.value) || 52, contentRows: Number(rowsInput.value) || 52 };
+      const percent = effectiveSimilarity(plan.cols, plan.contentRows);
+      similarityActual.textContent = autoColorsToggle.checked
+        ? "实际相似度 " + Number(percent.toFixed(2)) + "%" : "相近颜色合并已关闭";
+    }
+    function changeSimilarity() {
+      cancelPattern();
+      updateSimilarity();
+      if (image) recognize();
+    }
+    autoColorsToggle.addEventListener("change", changeSimilarity);
+    similarityMode.addEventListener("change", changeSimilarity);
+    similarityRange.addEventListener("input", () => {
+      similarityPercent.value = similarityRange.value;
+      invalidateShare(true);
+      updateSimilarity();
+    });
+    similarityRange.addEventListener("change", changeSimilarity);
+    similarityPercent.addEventListener("input", () => {
+      invalidateShare(true);
+      updateSimilarity();
+    });
+    similarityPercent.addEventListener("change", () => {
+      similarityPercent.value = String(Math.round(Math.max(60, Math.min(98, Number(similarityPercent.value) || 90))));
+      changeSimilarity();
+    });
+    [colsInput, rowsInput].forEach((input) => input.addEventListener("input", updateSimilarity));
+    updateSimilarity();
+    sheetsInput.addEventListener("input", () => invalidateShare());
+    gridToggle.addEventListener("change", () => invalidateShare());
+
+    shareGenerateBtn.addEventListener("click", async () => {
+      if (busy || shareTask || !pattern || !sharePatternValid) return;
+      if (location.protocol !== "https:" && location.protocol !== "http:") {
+        shareStatus.textContent = "分享需要在线网站，请在 HTTPS 网站中打开；本地 file:// 页面无法生成可访问的分享链接。";
+        return;
+      }
+      invalidateShare();
+      const data = pattern;
+      const edge = view === "edge";
+      const revision = shareRevision;
+      const currentJob = job;
+      const task = { controller: new AbortController() };
+      const stillCurrent = () => revision === shareRevision && pattern === data && sharePatternValid;
+      shareTask = task;
+      busy = true;
+      recognizeBtn.disabled = true;
+      updateDownloadLabel();
+      shareStatus.textContent = "正在生成整张" + (edge ? "白边色号图" : "色号图（无网格）") + "…";
+      let timeout = null;
+      let timedOut = false;
+      try {
+        const cell = fullSheetCell(data.cols, data.rows);
+        const blob = await encodeFullSheet(data, false, edge, cell, true, stillCurrent);
+        if (!stillCurrent()) return;
+        if (blob.size > 40 * 1024 * 1024) throw new Error("整张图纸超过 40 MiB，未上传。请减少格数后重新识别，再生成分享链接。");
+        const form = new FormData();
+        form.append("image", blob, "sheet.png");
+        form.append("cols", String(data.cols));
+        form.append("rows", String(data.rows));
+        form.append("kind", edge ? "edge" : "code");
+        shareStatus.textContent = "正在上传整张图纸（不含原照片）…";
+        timeout = setTimeout(() => { timedOut = true; task.controller.abort(); }, 120000);
+        const response = await fetch(new URL("share.php", location.href), {
+          method: "POST", body: form, credentials: "same-origin", signal: task.controller.signal
+        });
+        let result;
+        try { result = await response.json(); } catch (_) { throw new Error("分享服务未返回有效结果，请稍后重试。"); }
+        if (!stillCurrent()) return;
+        if (!response.ok || !result.ok) throw new Error(result.error || "分享上传失败，请稍后重试。");
+        const imageUrl = new URL(result.image_url);
+        const previewUrl = new URL(result.preview_url);
+        const canonical = "https://saas6.qianqi.online";
+        if (imageUrl.origin !== canonical || previewUrl.origin !== canonical || imageUrl.pathname !== "/grid/share.php" || previewUrl.pathname !== "/grid/share.php" || !/^[a-f0-9]{64}\.png$/.test(imageUrl.searchParams.get("image") || "") || !/^[a-f0-9]{64}$/.test(previewUrl.searchParams.get("id") || "")) {
+          throw new Error("分享服务返回的链接无效，请稍后重试。");
+        }
+        shareUrlInput.value = imageUrl.href;
+        sharePreview.href = previewUrl.href;
+        shareResult.hidden = false;
+        shareStatus.textContent = "已生成整张" + (edge ? "白边色号图" : "色号图（无网格）") + "链接。持有链接的人可查看图纸，链接有效30天。";
+        setStatus("");
+      } catch (error) {
+        if (stillCurrent()) {
+          shareStatus.textContent = timedOut ? "上传超时，结果尚未确认。请稍后重试。" : (error.message || "分享失败，请稍后重试。");
+          setStatus("");
+        }
+      } finally {
+        if (timeout !== null) clearTimeout(timeout);
+        if (shareTask === task) {
+          shareTask = null;
+          if (job === currentJob) busy = false;
+          recognizeBtn.disabled = busy || !image;
+          updateDownloadLabel();
+        }
+      }
+    });
+
+    document.querySelector("#shareCopy").addEventListener("click", async () => {
+      const url = shareUrlInput.value;
+      const revision = shareRevision;
+      if (!url || shareResult.hidden) return;
+      try {
+        await navigator.clipboard.writeText(url);
+        if (revision === shareRevision) shareStatus.textContent = "原图链接已复制。";
+      } catch (_) {
+        if (revision !== shareRevision) return;
+        shareUrlInput.focus();
+        shareUrlInput.select();
+        shareStatus.textContent = "自动复制未成功。链接已选中，请手动复制，手机可长按链接复制。";
+      }
+    });
 
     function setStatus(text, isError) {
       status.textContent = text || "";
@@ -701,6 +923,7 @@
       other.value = String(clampCount(Math.round(value * ratio)));
       input.dataset.last = input.value;
       other.dataset.last = other.value;
+      updateSimilarity();
     }
 
     function isCodeLike() {
@@ -790,8 +1013,11 @@
 
     function updateDownloadLabel() {
       downloadBtn.textContent = view === "source" ? "下载原图" : view === "edge" ? "下载白边色号" : view === "code" ? "下载色号图" : "下载拼豆图";
-      downloadBtn.disabled = busy || (view === "source" ? !image : !pattern);
-      recognitionDownloadBtn.disabled = busy || !pattern;
+      downloadBtn.disabled = busy || !!shareTask || (view === "source" ? !image : !pattern);
+      recognitionDownloadBtn.disabled = busy || !!shareTask || !pattern;
+      shareGenerateBtn.disabled = busy || !!shareTask || !pattern || !sharePatternValid;
+      shareGenerateBtn.textContent = shareTask ? "正在生成分享链接…" : "生成分享链接";
+      shareHint.textContent = "分享整张" + (view === "edge" ? "白边色号图" : "色号图（无网格）") + "，不上传原照片。持有链接的人可查看图纸，链接有效30天。";
       sheetField.classList.toggle("is-on", isCodeLike());
     }
 
@@ -818,6 +1044,10 @@
     });
 
     function loadFile(file) {
+      const loadRevision = ++imageLoadRevision;
+      if (image && String(image.src).startsWith("blob:")) URL.revokeObjectURL(image.src);
+      image = null;
+      cancelPattern();
       if (file.type && !/^image\/(png|jpeg|webp)$/.test(file.type)) {
         setStatus("请选择 PNG、JPG 或 WebP。", true);
         return;
@@ -825,7 +1055,7 @@
       const url = URL.createObjectURL(file);
       const next = new Image();
       next.onload = () => {
-        if (image && String(image.src).startsWith("blob:")) URL.revokeObjectURL(image.src);
+        if (loadRevision !== imageLoadRevision) { URL.revokeObjectURL(url); return; }
         image = next;
         image.fileName = file.name;
         original.src = url;
@@ -841,6 +1071,7 @@
       };
       next.onerror = () => {
         URL.revokeObjectURL(url);
+        if (loadRevision !== imageLoadRevision) return;
         setStatus("这张图片无法打开，请换一张 PNG、JPG 或 WebP。", true);
       };
       next.src = url;
@@ -861,6 +1092,7 @@
     });
     document.querySelectorAll("[data-view]").forEach((button) => {
       button.addEventListener("click", () => {
+        if (view !== button.dataset.view) invalidateShare();
         view = button.dataset.view;
         document.querySelectorAll("[data-view]").forEach((item) => {
           const active = item === button;
@@ -876,12 +1108,18 @@
         setStatus("请先上传原图。", true);
         return;
       }
+      cancelPattern();
+      const mergeColors = autoColorsToggle.checked;
+      const source = image;
+      const recognitionShareRevision = shareInputRevision;
       const requestedRows = commitCount(rowsInput);
       const plan = planGrid(image, commitCount(colsInput), requestedRows, dimensionDriver);
       colsInput.value = String(plan.cols);
       rowsInput.value = String(plan.rows);
       const cols = plan.cols;
       const rows = plan.rows;
+      const similarity = effectiveSimilarity(cols, plan.contentRows);
+      updateSimilarity();
       codeZoomIndex = 0;
       const current = ++job;
       busy = true;
@@ -890,9 +1128,15 @@
       setStatus("正在按 " + cols + " × " + rows + " 识别…");
       try {
         ensureLut();
-        const ids = await sampleCells(image, cols, rows, plan.contentRows, current);
+        const rawIds = await sampleCells(source, cols, rows, plan.contentRows, current);
         if (current !== job) return;
-        pattern = { ids, cols, rows, contentRows: plan.contentRows, whiteRows: plan.whiteRows };
+        const reduced = await mergeSimilarColors(rawIds, similarity, current, mergeColors);
+        if (!reduced || current !== job) return;
+        pattern = { ids: reduced.ids, cols, rows, contentRows: plan.contentRows, whiteRows: plan.whiteRows, similarity };
+        colorSummary.textContent = mergeColors
+          ? "原" + reduced.originalColors + "色，合并后" + reduced.mergedColors + "色（相似度 " + Number(similarity.toFixed(2)) + "%）"
+          : "原" + reduced.originalColors + "色，未合并";
+        sharePatternValid = recognitionShareRevision === shareInputRevision;
         summarize(pattern);
         summary.textContent = plan.whiteRows
           ? "横向 " + cols + " × 纵向 " + rows + "。原图按比例占 " + cols + " × " + plan.contentRows + "，下方 " + plan.whiteRows + " 行是白色背景。"
@@ -965,6 +1209,70 @@
       return ids;
     }
 
+    function effectiveSimilarity(cols, contentRows) {
+      if (similarityMode.value === "manual") {
+        return Math.max(60, Math.min(98, Number(similarityPercent.value) || 90));
+      }
+      // Our adaptive formula, independent of the reference grouping algorithm.
+      // Smaller content grids merge more aggressively; padding does not count.
+      const side = Math.sqrt(cols * contentRows);
+      return Math.max(60, Math.min(98, 90 + 4 * Math.log2(Math.max(1, side) / 100)));
+    }
+
+    function weightedRgbDistance(a, b) {
+      return Math.sqrt(0.3 * (a.r - b.r) ** 2 + 0.59 * (a.g - b.g) ** 2 + 0.11 * (a.b - b.b) ** 2);
+    }
+
+    async function mergeSimilarColors(ids, percent, current, enabled = true) {
+      const counts = new Uint32Array(PALETTE.length);
+      const chunk = 16384;
+      for (let start = 0; start < ids.length; start += chunk) {
+        if (current !== job) return null;
+        for (let i = start; i < Math.min(ids.length, start + chunk); i += 1) {
+          if (ids[i] >= 0) counts[ids[i]] += 1;
+        }
+        await pause();
+      }
+      if (current !== job) return null;
+      const used = Array.from(counts.keys()).filter((id) => counts[id])
+        .sort((a, b) => counts[b] - counts[a] || a - b);
+      const originalColors = used.length;
+      const mapping = new Int16Array(PALETTE.length);
+      mapping.fill(-1);
+      const representatives = [];
+      const threshold = Math.max(10, (100 - percent) * 2.2);
+      let maxDistance = 0;
+      for (let index = 0; index < used.length; index += 1) {
+        if (current !== job) return null;
+        const id = used[index];
+        if (mapping[id] >= 0) continue;
+        mapping[id] = id;
+        representatives.push(id);
+        // Highest-use ungrouped color absorbs every qualifying ungrouped color.
+        // Representatives remain fixed; every palette prefix uses the same rule.
+        if (enabled) {
+          for (const candidate of used) {
+            if (mapping[candidate] >= 0) continue;
+            const distance = weightedRgbDistance(PALETTE[id], PALETTE[candidate]);
+            if (distance > threshold) continue;
+            mapping[candidate] = id;
+            maxDistance = Math.max(maxDistance, distance);
+          }
+        }
+        if (index % 32 === 31) await pause();
+      }
+      const result = new Int16Array(ids.length);
+      for (let start = 0; start < ids.length; start += chunk) {
+        if (current !== job) return null;
+        for (let i = start; i < Math.min(ids.length, start + chunk); i += 1) {
+          result[i] = ids[i] < 0 ? ids[i] : mapping[ids[i]];
+        }
+        await pause();
+      }
+      if (current !== job) return null;
+      return { ids: result, originalColors, mergedColors: representatives.length, mapping, threshold, maxDistance };
+    }
+
     function summarize(data) {
       const counts = new Map();
       let blanks = 0;
@@ -1031,14 +1339,26 @@
     }
 
     function beadBaseWidth(canvas) {
-      return Math.min(720, Math.max(280, canvas.width));
+      const style = window.getComputedStyle(stage);
+      const available = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      return Math.min(720, Math.max(280, canvas.width), Math.max(1, available));
     }
 
     function applyBeadZoom() {
       const canvas = stage.querySelector("canvas.bead-canvas");
       if (!canvas) return;
-      const base = Number(canvas.dataset.base) || beadBaseWidth(canvas);
+      const base = beadBaseWidth(canvas);
+      canvas.dataset.base = String(base);
       canvas.style.width = Math.round(base * ZOOMS[beadZoomIndex]) + "px";
+    }
+
+    window.addEventListener("resize", applyBeadZoom);
+    if (typeof ResizeObserver === "function") {
+      const previewSizeObserver = new ResizeObserver(() => {
+        applyBeadZoom();
+        if (isCodeLike() && pattern && pattern.redraw) pattern.redraw();
+      });
+      previewSizeObserver.observe(stage);
     }
 
     function renderBeadPreview(data, showGrid) {
@@ -1107,7 +1427,6 @@
       scroll.append(spacer);
       frame.append(scroll, canvas);
       stage.replaceChildren(frame);
-      frame.style.width = Math.max(320, stage.clientWidth) + "px";
       let scheduled = false;
       const draw = () => {
         scheduled = false;
@@ -1124,6 +1443,7 @@
         const padY = Math.max(8, (viewH - fullH) / 2);
         spacer.style.width = Math.max(viewW, fullW + padX * 2) + "px";
         spacer.style.height = Math.max(viewH, fullH + padY * 2) + "px";
+        if (scroll.clientWidth !== viewW || scroll.clientHeight !== viewH) requestDraw();
         if (codeZoomIndex === 0) {
           scroll.scrollLeft = 0;
           scroll.scrollTop = 0;
@@ -1557,7 +1877,8 @@
       }
     }
 
-    async function paintBeadPixels(data, col0, row0, colCount, rowCount, cell, showGrid) {
+    async function paintBeadPixels(data, col0, row0, colCount, rowCount, cell, showGrid, checkCurrent = () => {}) {
+      checkCurrent();
       const width = colCount * cell;
       const height = rowCount * cell;
       const pixels = allocPixels(width, height);
@@ -1568,13 +1889,14 @@
           const color = PALETTE[id];
           fillRectPx(pixels, width, height, col * cell, row * cell, cell, cell, color.r, color.g, color.b);
         }
-        if (row % 16 === 15) await pause();
+        if (row % 16 === 15) { await pause(); checkCurrent(); }
       }
       if (showGrid) paintGridLines(pixels, width, height, colCount, rowCount, cell);
       return { width, height, data: pixels };
     }
 
-    async function paintCodePixels(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell) {
+    async function paintCodePixels(data, col0, row0, colCount, rowCount, showGrid, whiteBorder, cell, checkCurrent = () => {}) {
+      checkCurrent();
       const width = colCount * cell;
       const height = rowCount * cell;
       const pixels = allocPixels(width, height);
@@ -1590,7 +1912,7 @@
           fillRectPx(pixels, width, height, x + pad, y + pad, inner, inner, color.r, color.g, color.b);
           paintGlyphs(pixels, width, height, color.code, x + pad, y + pad, inner, color.inkR, color.inkG, color.inkB);
         }
-        if (row % 8 === 7) await pause();
+        if (row % 8 === 7) { await pause(); checkCurrent(); }
       }
       if (showGrid && !whiteBorder) paintGridLines(pixels, width, height, colCount, rowCount, cell);
       return { width, height, data: pixels };
@@ -1821,15 +2143,22 @@
       state.s2 = s2 % 65521;
     }
 
-    async function encodeFullSheet(data, showGrid, whiteBorder, cell, withCodes = true) {
+    async function encodeFullSheet(data, showGrid, whiteBorder, cell, withCodes = true, isCurrent = () => true) {
+      const checkCurrent = () => { if (!isCurrent()) throw new DOMException("已取消旧图纸分享", "AbortError"); };
+      checkCurrent();
       const width = data.cols * cell;
       const height = data.rows * cell;
       const paintRows = (row0, rowCount) => withCodes
-        ? paintCodePixels(data, 0, row0, data.cols, rowCount, showGrid, whiteBorder, cell)
-        : paintBeadPixels(data, 0, row0, data.cols, rowCount, cell, false);
+        ? paintCodePixels(data, 0, row0, data.cols, rowCount, showGrid, whiteBorder, cell, checkCurrent)
+        : paintBeadPixels(data, 0, row0, data.cols, rowCount, cell, false, checkCurrent);
       if (typeof CompressionStream !== "function") {
+        await pause();
+        checkCurrent();
         const painted = await paintRows(0, data.rows);
-        return pixelsToPng(painted.width, painted.height, painted.data);
+        checkCurrent();
+        const blob = await pixelsToPng(painted.width, painted.height, painted.data);
+        checkCurrent();
+        return blob;
       }
       const stream = new CompressionStream("deflate");
       const writer = stream.writable.getWriter();
@@ -1852,17 +2181,22 @@
       const label = withCodes ? (whiteBorder ? "白边色号" : "色号") : "软件识别图";
       try {
         for (let top = 0; top < data.rows; top += strip) {
+          checkCurrent();
           if (failed) throw failed;
           const count = Math.min(strip, data.rows - top);
           setStatus("正在绘制整张" + label + " " + Math.min(data.rows, top + count) + " / " + data.rows + " 行…");
           await pause();
+          checkCurrent();
           const painted = await paintRows(top, count);
+          checkCurrent();
           const raw = rgbScanlines(painted.width, painted.height, painted.data);
           adlerAdd(adler, raw);
           await writer.write(raw);
+          checkCurrent();
         }
         await writer.close();
         await reading;
+        checkCurrent();
         if (failed) throw failed;
       } catch (error) {
         await writer.abort(error).catch(() => {});
