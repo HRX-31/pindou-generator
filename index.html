@@ -379,18 +379,149 @@
     body.is-h5 .share-box .share-url-row input { height: 42px; font-size: 16px; }
     .share-url-row button { flex: 0 1 auto; max-width: 100%; height: auto; min-height: 42px; white-space: normal; }
     .share-box p, #shareHint { overflow-wrap: anywhere; }
+
+    /* Reference chrome is independent of pixel export renderers. */
+    :root { --paper:#faf5ef; --panel:#fffcf8; --ink:#173d2e; --muted:#7c7972; --line:#eee4da; --stamp:#215d46; --stamp-dark:#184a37; --shadow:0 3px 10px #62422b0c; }
+    [hidden] { display:none !important; }
+    body { background:var(--paper); }
+    button:focus-visible,select:focus-visible,canvas:focus-visible { outline:3px solid #b88a32; outline-offset:3px; }
+    main { width:min(920px,calc(100% - 32px)); padding:16px 0 40px; }
+    .title-row { display:grid; grid-template-columns:72px minmax(0,1fr) 72px; gap:8px; align-items:center; }
+    header h1,body.is-h5 header h1 { grid-column:2; grid-row:1; text-align:center; font-family:inherit; font-size:28px; font-weight:750; letter-spacing:.04em; }
+    header > p { display:none; }
+    #workspaceBack { grid-column:1; grid-row:1; justify-self:start; width:44px; padding:0; border:0; background:transparent; }
+    .ui-icon { width:25px; height:25px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+    #editorDone { grid-column:3; grid-row:1; margin:0; width:72px; height:38px; font-weight:700; border-radius:16px; }
+    .workspace-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:3px; gap:3px; background:#ede8df; border-radius:24px; margin:16px 0 12px; }
+    .workspace-tabs button { height:46px; padding:0 4px; border:0; border-radius:19px; background:transparent; color:#292c28; font-size:19px; font-weight:600; }
+    .workspace-tabs [aria-selected="true"] { background:var(--stamp); color:white; }
+    #workspaceEditor { min-width:0; padding:0; }
+    .canvas-card { position:relative; padding:12px 24px 36px; border:1px solid var(--line); border-radius:22px; background:var(--panel); box-shadow:var(--shadow); }
+    .editor-head,.editor-zoom,.editor-actions { display:flex; align-items:center; gap:8px; }
+    .editor-head { justify-content:space-between; margin-bottom:8px; min-width:0; }
+    .editor-head h2,.editor-card h2,#workspaceColors h2 { margin:0; font-size:20px; font-weight:700; }
+    #editorSummary { font-size:16px; font-weight:500; color:#292c28; }
+    .history-actions { display:flex; gap:8px; flex:none; }
+    .history-actions button { width:44px; height:32px; padding:0; background:#fcf8f2; font-size:25px; line-height:1; }
+    .canvas-area { position:relative; width:100%; max-width:660px; margin:auto; }
+    .editor-scroll { width:100%; max-width:100%; aspect-ratio:1; min-height:0; overflow:auto; overscroll-behavior:contain; border:1px solid #c5bdb3; background:white; position:relative; }
+    #editorScroll > div { margin-inline:auto; }
+    #editorCanvas { display:block; max-width:none; image-rendering:pixelated; touch-action:pan-x pan-y; background:white; }
+    #editorCanvas.is-box { touch-action:none; }
+    .canvas-pan { position:absolute; top:8px; right:8px; height:30px; padding:0 10px; background:#fffcf8ed; box-shadow:var(--shadow); font-size:12px; }
+    .canvas-pan[aria-pressed="true"] { background:var(--stamp); color:white; }
+    .editor-zoom { position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); justify-content:center; gap:4px; padding:5px 8px; border:1px solid var(--line); border-radius:999px; background:#fffcf8f5; box-shadow:0 4px 12px #32291d1a; white-space:nowrap; }
+    .editor-zoom button { height:32px; padding:0 10px; border:0; background:transparent; font-size:24px; }
+    .editor-zoom output { min-width:58px; text-align:center; font-size:16px; font-weight:600; font-variant-numeric:tabular-nums; }
+    .editor-zoom #editorFit { height:28px; margin-left:8px; padding:0 12px; border:1px solid var(--stamp); font-size:14px; }
+    .editor-tools { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:10px; }
+    .editor-tools button { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; padding:8px 4px; height:76px; border-radius:16px; background:var(--panel); box-shadow:var(--shadow); font-size:17px; }
+    .editor-tools [aria-pressed="true"] { background:var(--stamp); color:white; border-color:var(--stamp); }
+    .editor-card { margin-top:12px; padding:14px 18px; border:1px solid var(--line); border-radius:18px; background:var(--panel); box-shadow:var(--shadow); }
+    .editor-card h2,#workspaceColors h2 { display:flex; align-items:center; gap:10px; }
+    .editor-card h2::before,#workspaceColors h2::before { content:""; width:5px; height:21px; border-radius:5px; background:var(--stamp); flex:none; }
+    #selectionCount { margin:3px 0 0 15px; font-size:14px; }
+    .color-compare { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:16px; margin:12px auto 16px; max-width:540px; align-items:center; }
+    .color-compare > span { font-size:30px; color:#a1978c; }
+    .color-description { min-width:0; overflow-wrap:anywhere; display:flex; align-items:center; justify-content:center; gap:10px; color:#292c28; font-size:16px; }
+    .color-description i { flex:none; width:48px; height:48px; border-radius:10px; border:1px solid #0000000a; }
+    .color-description b { display:block; font-weight:600; }
+    .color-description small { display:block; color:var(--muted); margin-top:3px; font-size:14px; }
+    .editor-actions { flex-wrap:wrap; }
+    .editor-actions button { height:auto; min-height:44px; flex:1 1 120px; border-radius:12px; padding:10px; font-weight:600; }
+    #editorReplace { flex:1.6 1 0; } #editorCancel { flex:1 1 0; color:#5c5c56; border-color:#cbc2b7; background:transparent; }
+    .palette-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:8px; margin-top:12px; max-height:440px; overflow:auto; }
+    .palette-grid button { display:flex; flex-direction:column; align-items:center; gap:4px; height:auto; min-height:96px; padding:6px; border:1px solid transparent; background:transparent; border-radius:10px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:pan-x pan-y; }
+    .palette-grid button[aria-pressed="true"] { border-color:var(--stamp); box-shadow:0 2px 5px #173d2e16; }
+    .palette-grid i { display:block; flex:none; width:52px; height:38px; border-radius:9px; border:1px solid #0000000a; }
+    .palette-grid b { color:#292c28; font-size:16px; }
+    .palette-grid small { color:var(--muted); white-space:nowrap; }
+    #editorPalette { grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:calc((100% - 40px)/6); gap:8px; max-height:none; overflow-x:auto; padding:2px 2px 6px; }
+    #editorAll { padding:0; height:30px; border:0; background:transparent; color:#5c5c56; }
+    .palette-note { border-top:1px solid var(--line); padding-top:10px; text-align:center; }
+    #editorHint { margin:10px 4px 0; font-size:12px; }
+    #editorMessage:empty { display:none; }
+    #editorMessage { padding:10px 12px; border-radius:12px; background:#eee8df; }
+    .palette-controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:12px 0; }
+    .palette-controls label { min-width:0; max-width:100%; }
+    .palette-controls select { max-width:100%; }
+    #paletteSearch,body.is-h5 #paletteSearch { height:42px; width:100%; font:inherit; text-align:left; padding:0 12px; }
+    #workspaceColors { min-width:0; padding:20px; border-radius:20px; }
+    #globalComparison { padding:12px; border-radius:12px; background:#f3eee6; overflow-wrap:anywhere; }
+    .layout,body.is-h5 .layout { margin-top:0; gap:14px; }
+    .panel { border-color:var(--line); box-shadow:var(--shadow); }
+    .preview-settings { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .preview-settings h2 { margin:0; font-size:18px; }
+    .drop { border-color:#c8d3c5; background:#f5f4eb; }
+    .view-tabs { background:#ede8df; }
+    .view-tabs button.is-active { background:var(--stamp); color:white; }
+    input[type="text"]:focus { outline-color:#215d4640; }
+    input[type="checkbox"],input[type="range"] { accent-color:var(--stamp); }
+    body[data-workspace="edit"] .layout,body[data-workspace="colors"] .layout { display:none; }
+    @media(max-width:600px) {
+      main,body.is-h5 main { width:calc(100% - 24px); padding-top:10px; }
+      header h1,body.is-h5 header h1 { font-size:24px; }
+      .title-row { grid-template-columns:60px minmax(0,1fr) 60px; }
+      #editorDone { width:60px; height:34px; }
+      .workspace-tabs { margin-top:12px; } .workspace-tabs button { height:38px; font-size:17px; }
+      .canvas-card { padding:10px 12px 32px; border-radius:18px; }
+      .editor-head { gap:6px; } #editorSummary { font-size:13px; }
+      .history-actions { gap:5px; } .history-actions button { width:34px; height:28px; font-size:22px; }
+      .editor-zoom { gap:2px; padding:5px 6px; } .editor-zoom button { padding:0 8px; } .editor-zoom #editorFit { margin-left:4px; padding:0 8px; }
+      .editor-tools { gap:8px; } .editor-tools button { height:66px; font-size:15px; border-radius:14px; }
+      .editor-card { padding:12px; } .editor-card h2,#workspaceColors h2 { font-size:18px; }
+      .color-compare { gap:8px; } .color-description { gap:7px; font-size:13px; }
+      .color-description i { width:38px; height:42px; } .color-description small { font-size:12px; }
+      .color-compare > span { font-size:24px; }
+      .editor-actions button { font-size:14px; padding:10px 6px; }
+      #editorPalette { grid-auto-columns:max(62px,calc((100% - 40px)/6)); }
+      #workspaceColors { padding:14px; } .preview-settings { flex-wrap:wrap; }
+    }
   </style>
 </head>
 <body>
   <main>
     <header>
       <div class="title-row">
-        <h1>格子图</h1>
-        <button id="h5Switch" type="button" aria-pressed="false">切换到 H5</button>
+        <button id="workspaceBack" type="button" aria-label="返回预览" hidden><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4-8 8 8 8"/></svg></button>
+        <h1>拼豆图纸</h1><button id="editorDone" class="primary" hidden>完成</button>
       </div>
       <p>上传原图，横向和纵向格数都可以自己填。原图按自身比例放在上方，多出来的高度用白色向下补上。色号图先显示完整图，再放大查看每一格的色号。原照片只在你的浏览器里处理；点击“生成分享链接”时，只上传生成的整张图纸。</p>
     </header>
-    <div class="layout">
+
+    <nav class="workspace-tabs" role="tablist" aria-label="图纸工作区">
+      <button id="tabPreview" role="tab" aria-selected="true" aria-controls="workspacePreview" data-workspace="preview">预览</button>
+      <button id="tabEdit" role="tab" aria-selected="false" aria-controls="workspaceEditor" data-workspace="edit" tabindex="-1">编辑</button>
+      <button id="tabColors" role="tab" aria-selected="false" aria-controls="workspaceColors" data-workspace="colors" tabindex="-1">用色</button>
+    </nav>
+    <section id="workspaceEditor" role="tabpanel" aria-labelledby="tabEdit" hidden>
+      <section class="canvas-card" aria-label="编辑画布">
+      <div class="editor-head"><h2 id="editorSummary">请先上传并识别图片</h2><div class="history-actions"><button id="editorUndo" title="撤销 Ctrl/⌘+Z" aria-label="撤销">↶</button> <button id="editorRedo" title="重做 Ctrl/⌘+Shift+Z" aria-label="重做">↷</button></div></div>
+      <div class="canvas-area">
+      <div id="editorScroll" class="editor-scroll"><canvas id="editorCanvas" tabindex="0" aria-label="图纸编辑画布；方向键移动，空格选择，Esc取消" aria-describedby="editorHint"></canvas></div>
+      <button class="canvas-pan" type="button" data-tool="pan" aria-pressed="false" title="拖动查看画布，不改变选择">移动</button>
+      <div class="editor-zoom"><button id="editorMinus" aria-label="缩小编辑画布">−</button><output id="editorScale">100%</output><button id="editorPlus" aria-label="放大编辑画布">＋</button><button id="editorFit">适应屏幕</button></div>
+      </div>
+      </section>
+      <div class="editor-tools" aria-label="编辑工具">
+        <button data-tool="single" aria-pressed="true" title="点按切换单格选择；拖动滚动"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/></svg><span>单格</span></button><button data-tool="box" aria-pressed="false" title="拖动选择矩形；滚动请切换移动"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path stroke-dasharray="3 3" d="M4 4h16v16H4z"/></svg><span>框选</span></button><button data-tool="pick" aria-pressed="false" title="点按取该格真实色卡颜色"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 17l10-10 3 3L7 20H3v-4m12-10 3-3a2 2 0 0 1 3 3l-3 3"/></svg><span>吸色</span></button><button data-tool="highlight" aria-pressed="false" title="点按高亮全图同色，仅影响显示"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10Z"/></svg><span>高亮</span></button>
+      </div>
+      <p id="editorMessage" class="hint" role="status" aria-live="polite"></p>
+      <section class="editor-card"><h2>当前选区</h2><p id="selectionCount" class="hint">已选 0 格</p>
+        <div class="color-compare"><div id="selectionOriginal" class="color-description">原色：未选择</div><span aria-hidden="true">→</span><div id="selectionTarget" class="color-description">新色：请选择色卡</div></div>
+        <div class="editor-actions"><button id="editorReplace" class="primary">替换选区颜色</button><button id="editorCancel">取消选择</button></div>
+      </section>
+      <section class="editor-card"><div class="editor-head"><h2>色号与用量</h2><button id="editorAll">全部 ›</button></div><div id="editorPalette" class="palette-grid"></div><p class="hint palette-note">短按色卡选新色并高亮；长按已用色号进入全图替换，不会立即修改。也可在“用色”页选择原色并确认。</p></section>
+      <p id="editorHint" class="hint">单格：点按选格，拖动滚动。框选：拖动选矩形，切换“移动”后滚动。方向键移动，空格操作，Esc取消。</p>
+    </section>
+    <section id="workspaceColors" class="panel" role="tabpanel" aria-labelledby="tabColors" hidden>
+      <h2>色号与用量</h2><p id="paletteSummary" class="hint"></p>
+      <div class="palette-controls"><label><input id="paletteAll" type="checkbox" /> 显示全部色卡</label><label>原色 <select id="globalOriginal" aria-label="全图替换原色"></select></label></div>
+      <label for="paletteSearch">查找色号或名称</label><input id="paletteSearch" type="text" placeholder="例如 F8" />
+      <p id="globalComparison" class="hint" role="status" aria-live="polite"></p><div class="editor-actions"><button id="globalReplace" class="primary">确认替换全图同色</button><button id="globalCancel">取消替换</button><button id="returnSelection">返回选区编辑</button></div>
+      <div id="allPalette" class="palette-grid"></div><p class="hint">短按选新色；长按已用色号设置全图替换原色。返回选区编辑会保留当前选区。</p><p id="paletteEmpty" class="hint" hidden>没有匹配颜色。</p>
+    </section>
+    <div id="workspacePreview" class="layout" role="tabpanel" aria-labelledby="tabPreview">
       <section class="panel source">
         <div id="drop" class="drop" role="button" tabindex="0">
           <div>
@@ -406,6 +537,7 @@
         <p id="status" class="status" role="status"></p>
       </section>
       <section class="panel result">
+        <div class="preview-settings"><h2>图纸设置</h2><button id="h5Switch" type="button" aria-pressed="false">切换到 H5</button></div>
         <div class="fields">
           <label class="dim">横向格数
             <input id="cols" type="text" inputmode="numeric" value="52" aria-label="横向格数" data-last="52" />
@@ -752,6 +884,7 @@
       busy = false;
       stopCodeWatch();
       pattern = null;
+      if (editorReady) resetEditor();
       summary.textContent = "";
       colorSummary.textContent = "";
       recognizeBtn.disabled = !image;
@@ -805,12 +938,13 @@
         return;
       }
       invalidateShare();
-      const data = pattern;
+      const sourcePattern = pattern;
+      const data = snapshotPattern(pattern);
       const edge = view === "edge";
       const revision = shareRevision;
       const currentJob = job;
       const task = { controller: new AbortController() };
-      const stillCurrent = () => revision === shareRevision && pattern === data && sharePatternValid;
+      const stillCurrent = () => revision === shareRevision && pattern === sourcePattern && sharePatternValid;
       shareTask = task;
       busy = true;
       recognizeBtn.disabled = true;
@@ -1019,6 +1153,7 @@
       shareGenerateBtn.textContent = shareTask ? "正在生成分享链接…" : "生成分享链接";
       shareHint.textContent = "分享整张" + (view === "edge" ? "白边色号图" : "色号图（无网格）") + "，不上传原照片。持有链接的人可查看图纸，链接有效30天。";
       sheetField.classList.toggle("is-on", isCodeLike());
+      if (editorReady) refreshEditorControls();
     }
 
     drop.addEventListener("click", () => fileInput.click());
@@ -1132,12 +1267,17 @@
         if (current !== job) return;
         const reduced = await mergeSimilarColors(rawIds, similarity, current, mergeColors);
         if (!reduced || current !== job) return;
+        if (recognitionShareRevision !== shareInputRevision || source !== image) {
+          setStatus("参数已改变，请重新识别后编辑。");
+          return;
+        }
         pattern = { ids: reduced.ids, cols, rows, contentRows: plan.contentRows, whiteRows: plan.whiteRows, similarity };
         colorSummary.textContent = mergeColors
           ? "原" + reduced.originalColors + "色，合并后" + reduced.mergedColors + "色（相似度 " + Number(similarity.toFixed(2)) + "%）"
           : "原" + reduced.originalColors + "色，未合并";
         sharePatternValid = recognitionShareRevision === shareInputRevision;
         summarize(pattern);
+        if (editorReady) resetEditor();
         summary.textContent = plan.whiteRows
           ? "横向 " + cols + " × 纵向 " + rows + "。原图按比例占 " + cols + " × " + plan.contentRows + "，下方 " + plan.whiteRows + " 行是白色背景。"
           : "横向 " + cols + " × 纵向 " + rows + "，与原图比例一致。";
@@ -1621,9 +1761,9 @@
         if (!pattern) return;
         if (view === "bead") {
           setStatus("正在生成拼豆图…");
-          await exportBead(pattern, gridToggle.checked);
+          await exportBead(snapshotPattern(pattern), gridToggle.checked);
         } else {
-          const note = await exportCodes(pattern, view === "code" && gridToggle.checked, view === "edge", readSheetCount());
+          const note = await exportCodes(snapshotPattern(pattern), view === "code" && gridToggle.checked, view === "edge", readSheetCount());
           setStatus(note || "");
           return;
         }
@@ -1641,10 +1781,11 @@
       try {
         busy = true;
         updateDownloadLabel();
-        const cell = fullSheetCell(pattern.cols, pattern.rows);
-        const blob = await encodeFullSheet(pattern, false, false, cell, true);
-        const note = "已生成整张软件识别图：横向 " + pattern.cols + " × 纵向 " + pattern.rows + "，每格 " + cell + " 像素，每个色格内均标注对应色号。请保存原图后导入识别软件。";
-        handoff(blob, "软件识别图-" + pattern.cols + "x" + pattern.rows + "-" + cell + "px.png", note);
+        const data = snapshotPattern(pattern);
+        const cell = fullSheetCell(data.cols, data.rows);
+        const blob = await encodeFullSheet(data, false, false, cell, true);
+        const note = "已生成整张软件识别图：横向 " + data.cols + " × 纵向 " + data.rows + "，每格 " + cell + " 像素，每个色格内均标注对应色号。请保存原图后导入识别软件。";
+        handoff(blob, "软件识别图-" + data.cols + "x" + data.rows + "-" + cell + "px.png", note);
         setStatus(note);
       } catch (error) {
         setStatus(error.message || "软件识别图生成失败。", true);
@@ -2283,6 +2424,297 @@
       if (!isIOS()) downloadBlob(blob, filename);
       else setStatus("请长按上面的图片，选择存储到照片。");
     });
+
+    // Editor owns only selection/history/display state. Export continues to read pattern.ids.
+    var editorReady = false;
+    function snapshotPattern(data) {
+      // Freeze the source pixels for every asynchronous encoder, including shared links.
+      return { ids:data.ids.slice(), cols:data.cols, rows:data.rows,
+        contentRows:data.contentRows, whiteRows:data.whiteRows, similarity:data.similarity };
+    }
+    const ed = { tab:"preview", tool:"single", selected:new Set(), target:null, highlight:null,
+      undo:[], redo:[], bytes:0, zoom:1, cell:1, cursor:0, drag:null, frame:0 };
+    const HISTORY_BYTES = 16 * 1024 * 1024, HISTORY_STEPS = 40;
+    const $editor = id => document.getElementById(id);
+    const editCanvas = $editor("editorCanvas"), editScroll = $editor("editorScroll");
+    function editorLocked() { return busy || !!shareTask || !pattern || !sharePatternValid; }
+    function editorMessage(text) { $editor("editorMessage").textContent=text; }
+    function resetEditor() {
+      cancelPalettePress();
+      ed.selected.clear(); ed.target=null; ed.highlight=null; ed.undo=[]; ed.redo=[]; ed.bytes=0;
+      ed.zoom=1; ed.cursor=0; ed.drag=null;
+      $editor("globalOriginal").value="";
+      hideSaver();
+      if (editCanvas.hasPointerCapture && ed.pointerId != null && editCanvas.hasPointerCapture(ed.pointerId)) editCanvas.releasePointerCapture(ed.pointerId);
+      ed.pointerId=null; editorMessage(""); refreshEditor();
+    }
+    function setWorkspace(tab, focus=false) {
+      cancelPalettePress(true);
+      ed.tab=tab; document.body.dataset.workspace=tab;
+      document.querySelectorAll(".workspace-tabs [data-workspace]").forEach(b=>{
+        const active=b.dataset.workspace===tab; b.setAttribute("aria-selected",String(active)); b.tabIndex=active?0:-1;
+        if(active && focus) b.focus();
+      });
+      $editor("workspacePreview").hidden=tab!=="preview";
+      $editor("workspaceEditor").hidden=tab!=="edit"; $editor("workspaceColors").hidden=tab!=="colors";
+      $editor("editorDone").hidden=tab==="preview";
+      $editor("workspaceBack").hidden=tab==="preview";
+      $editor("workspaceBack").setAttribute("aria-label",tab==="colors"?"返回选区编辑":"返回预览");
+      if(tab==="preview") window.dispatchEvent(new Event("resize"));
+      refreshEditor();
+    }
+    document.querySelectorAll(".workspace-tabs [data-workspace]").forEach(b=>{
+      b.addEventListener("click",()=>setWorkspace(b.dataset.workspace));
+      b.addEventListener("keydown",e=>{
+        const tabs=[...document.querySelectorAll(".workspace-tabs [data-workspace]")]; let n=tabs.indexOf(b);
+        if(e.key==="ArrowRight") n=(n+1)%3; else if(e.key==="ArrowLeft") n=(n+2)%3;
+        else if(e.key==="Home") n=0; else if(e.key==="End") n=2; else return;
+        e.preventDefault(); setWorkspace(tabs[n].dataset.workspace,true);
+      });
+    });
+    $editor("editorDone").onclick=()=>setWorkspace("preview",true);
+    $editor("workspaceBack").onclick=()=>setWorkspace(ed.tab==="colors"?"edit":"preview",true);
+    function refreshEditorControls() {
+      const locked=editorLocked();
+      $editor("editorUndo").disabled=locked || !ed.undo.length;
+      $editor("editorRedo").disabled=locked || !ed.redo.length;
+      $editor("editorReplace").disabled=locked || !ed.selected.size || ed.target===null;
+      $editor("editorCancel").disabled=!ed.selected.size && ed.highlight===null && !ed.drag;
+      $editor("globalReplace").disabled=locked || ed.target===null || $editor("globalOriginal").value==="" || Number($editor("globalOriginal").value)===ed.target;
+      $editor("globalCancel").disabled=ed.target===null && ed.highlight===null;
+      document.querySelectorAll("[data-tool]").forEach(b=>b.disabled=locked);
+      document.querySelectorAll("#editorPalette button,#allPalette button").forEach(b=>b.disabled=locked);
+      $editor("globalOriginal").disabled=locked;
+      for(const id of ["editorMinus","editorPlus","editorFit"]) $editor(id).disabled=!pattern;
+      $editor("editorMinus").disabled=!pattern || ed.zoom<=0.5;
+      $editor("editorPlus").disabled=!pattern || ed.zoom>=20;
+      editCanvas.setAttribute("aria-disabled",String(locked));
+      if(busy || shareTask) editorMessage("正在生成或编码，图纸编辑已锁定，请等待完成。");
+      else if(!pattern) editorMessage("请在预览中上传并识别图片。");
+      else if(!sharePatternValid) editorMessage("参数已改变，请返回预览重新识别后编辑。");
+      else if($editor("editorMessage").textContent.includes("锁定") || $editor("editorMessage").textContent.includes("请在预览") || $editor("editorMessage").textContent.includes("参数已改变")) editorMessage("");
+    }
+    function colorDescription(node,id,prefix) {
+      node.replaceChildren(); const c=PALETTE[id];
+      if(!c) { node.textContent=prefix+(id===-1?"透明空格":"未选择"); return; }
+      const sw=document.createElement("i"); sw.style.background=c.hex;
+      const text=document.createElement("span"), code=document.createElement("b"), hex=document.createElement("small");
+      code.textContent=prefix+c.code; hex.textContent=c.hex; text.append(code,hex);
+      node.append(sw,text);
+    }
+    function paletteButtons(node,items) {
+      const fragment=document.createDocumentFragment();
+      for(const [id,count] of items) {
+        const c=PALETTE[id], b=document.createElement("button"), sw=document.createElement("i"), code=document.createElement("b"), qty=document.createElement("small");
+        b.type="button"; b.dataset.paletteId=String(id); b.disabled=editorLocked(); b.setAttribute("aria-pressed",String(ed.target===id));
+        b.title=c.name+" · "+c.hex+" · "+count+" 粒"+(count?"；长按设置全图替换原色":""); b.setAttribute("aria-label",c.code+"，"+c.hex+"，"+count+"粒，短按选择新色并高亮"+(count?"，长按设置全图替换原色":""));
+        sw.style.background=c.hex; code.textContent=c.code; qty.textContent=count+" 粒"; b.append(sw,code,qty);
+        b.onclick=()=>{ if(editorLocked()) return; ed.target=id; ed.highlight=id; refreshEditor(); };
+        fragment.append(b);
+      }
+      node.replaceChildren(fragment);
+    }
+    function refreshPalette() {
+      const active=document.activeElement;
+      const focusedPalette=active.closest && active.closest(".palette-grid");
+      const focusedId=active.dataset && active.dataset.paletteId;
+      const usage=pattern?pattern.usage:[], counts=new Map(usage);
+      paletteButtons($editor("editorPalette"),usage);
+      const input=$editor("globalOriginal"), old=input.value;
+      input.replaceChildren(); const none=document.createElement("option"); none.value=""; none.textContent="请选择原色"; input.append(none);
+      for(const [id,count] of usage) { const o=document.createElement("option"); o.value=id; o.textContent=PALETTE[id].code+"（"+count+"粒）"; input.append(o); }
+      input.value=[...counts.keys()].some(id=>String(id)===old)?old:"";
+      input.disabled=editorLocked();
+      const q=$editor("paletteSearch").value.trim().toLowerCase();
+      const list=($editor("paletteAll").checked?PALETTE.map((c,id)=>[id,counts.get(id)||0]):usage)
+        .filter(([id])=>(PALETTE[id].code+" "+PALETTE[id].name+" "+PALETTE[id].hex).toLowerCase().includes(q));
+      paletteButtons($editor("allPalette"),list); $editor("paletteEmpty").hidden=!!list.length;
+      $editor("paletteSummary").textContent=pattern?pattern.cols+" × "+pattern.rows+" 格 · "+usage.length+" 色 · "+(pattern.ids.length-pattern.blanks)+" 粒 · 透明空格 "+pattern.blanks:"请先在预览中上传并识别图片。";
+      const from=PALETTE[Number(input.value)], to=PALETTE[ed.target];
+      const affected=input.value!=="" && to && Number(input.value)!==ed.target?(counts.get(Number(input.value))||0):0;
+      $editor("globalComparison").textContent="原色："+(input.value!=="" && from?from.code+" "+from.hex:"未选择")+" → 新色："+(to?to.code+" "+to.hex:"未选择")+"；将影响 "+affected+" 格"+(!to || input.value===""?"（请先选定原色和新色）":"")+"。确认后替换，可撤销。";
+      if(focusedPalette && focusedId!==undefined) {
+        const replacement=focusedPalette.querySelector('[data-palette-id="'+focusedId+'"]');
+        if(replacement && !replacement.disabled) replacement.focus({preventScroll:true});
+      }
+    }
+    function refreshEditor() {
+      if(!editorReady) return;
+      $editor("editorSummary").textContent=pattern?pattern.cols+" × "+pattern.rows+" 格 · "+pattern.usage.length+" 色":"请先上传并识别图片";
+      $editor("selectionCount").textContent="已选 "+ed.selected.size+" 格";
+      const originals=new Set(); if(pattern) for(const i of ed.selected) originals.add(pattern.ids[i]);
+      if(originals.size>1) $editor("selectionOriginal").textContent="原色："+[...originals].slice(0,6).map(id=>id<0?"透明空格":PALETTE[id].code+" "+PALETTE[id].hex).join("、")+(originals.size>6?" 等 "+originals.size+" 色":"");
+      else colorDescription($editor("selectionOriginal"),originals.size?[...originals][0]:null,"原色：");
+      colorDescription($editor("selectionTarget"),ed.target,"新色：");
+      refreshPalette(); refreshEditorControls(); scheduleEditorDraw();
+    }
+    function scheduleEditorDraw() { if(!ed.frame) ed.frame=requestAnimationFrame(()=>{ ed.frame=0; drawEditor(); }); }
+    function drawEditor() {
+      if(ed.tab!=="edit") return;
+      const ctx=editCanvas.getContext("2d");
+      if(!pattern) { editCanvas.width=1; editCanvas.height=1; editCanvas.style.width="1px"; editCanvas.style.height="1px"; editorSpacer.style.width="1px"; editorSpacer.style.height="1px"; $editor("editorScale").textContent="100%"; return; }
+      ed.cell=Math.max(0.1,Math.min((editScroll.clientWidth-2)/pattern.cols,(editScroll.clientHeight-2)/pattern.rows))*ed.zoom;
+      const w=Math.max(1,Math.ceil(pattern.cols*ed.cell)),h=Math.max(1,Math.ceil(pattern.rows*ed.cell));
+      // Viewport raster, not a zoom-sized bitmap: even a 1000x1000 grid at 2000% is bounded.
+      editCanvas.style.width=w+"px"; editCanvas.style.height=h+"px";
+      editCanvas.width=Math.max(1,Math.min(w,editScroll.clientWidth)); editCanvas.height=Math.max(1,Math.min(h,editScroll.clientHeight));
+      editCanvas.style.position="sticky"; editCanvas.style.left="0"; editCanvas.style.top="0";
+      // Spacer supplies scroll geometry; canvas CSS size remains equal to its viewport raster.
+      editCanvas.style.width=editCanvas.width+"px"; editCanvas.style.height=editCanvas.height+"px";
+      editorSpacer.style.width=w+"px"; editorSpacer.style.height=h+"px";
+      const ox=editScroll.scrollLeft,oy=editScroll.scrollTop,c=ed.cell;
+      ctx.fillStyle="#fff"; ctx.fillRect(0,0,editCanvas.width,editCanvas.height);
+      const c0=Math.max(0,Math.floor(ox/c)),r0=Math.max(0,Math.floor(oy/c)),c1=Math.min(pattern.cols,Math.ceil((ox+editCanvas.width)/c)),r1=Math.min(pattern.rows,Math.ceil((oy+editCanvas.height)/c));
+      let box=null; if(ed.drag && ed.tool==="box") box=rectBounds(ed.drag.start,ed.drag.end);
+      for(let y=r0;y<r1;y++) for(let x=c0;x<c1;x++) {
+        const i=y*pattern.cols+x,id=pattern.ids[i],px=x*c-ox,py=y*c-oy;
+        ctx.fillStyle=id<0?"#f1ede6":PALETTE[id].hex; ctx.fillRect(px,py,c+0.3,c+0.3);
+        if(ed.highlight!==null && id!==ed.highlight) {ctx.fillStyle="#fff9";ctx.fillRect(px,py,c+0.3,c+0.3);}
+        if(c>=8) {ctx.strokeStyle="#0002";ctx.lineWidth=0.5;ctx.strokeRect(px,py,c,c);}
+        if(ed.selected.has(i) || (box && x>=box.x0 && x<=box.x1 && y>=box.y0 && y<=box.y1)) {ctx.fillStyle="#216a5555";ctx.fillRect(px,py,c,c);ctx.strokeStyle="#103e2b";ctx.lineWidth=1;ctx.strokeRect(px+0.5,py+0.5,Math.max(0,c-1),Math.max(0,c-1));}
+      }
+      if(document.activeElement===editCanvas) {ctx.strokeStyle="#b27616";ctx.lineWidth=2;ctx.strokeRect((ed.cursor%pattern.cols)*c-ox,Math.floor(ed.cursor/pattern.cols)*c-oy,c,c);}
+      $editor("editorScale").textContent=Math.round(ed.zoom*100)+"%";
+    }
+    const editorSpacer=document.createElement("div"); editorSpacer.style.position="relative"; editScroll.append(editorSpacer); editorSpacer.append(editCanvas);
+    function rectBounds(a,b) { return {x0:Math.min(a%pattern.cols,b%pattern.cols),x1:Math.max(a%pattern.cols,b%pattern.cols),y0:Math.min(Math.floor(a/pattern.cols),Math.floor(b/pattern.cols)),y1:Math.max(Math.floor(a/pattern.cols),Math.floor(b/pattern.cols))}; }
+    function cellAt(e) {
+      const r=editCanvas.getBoundingClientRect(); const x=Math.floor((e.clientX-r.left+editScroll.scrollLeft)/ed.cell),y=Math.floor((e.clientY-r.top+editScroll.scrollTop)/ed.cell);
+      return y>=0 && y<pattern.rows && x>=0 && x<pattern.cols?y*pattern.cols+x:null;
+    }
+    function actOnCell(i) {
+      if(editorLocked() || i===null) return;
+      ed.cursor=i;
+      if(ed.tool==="single" || ed.tool==="box") {if(ed.selected.has(i)) ed.selected.delete(i);else ed.selected.add(i);}
+      else if(ed.tool==="pick") { const id=pattern.ids[i]; if(id>=0) ed.target=id; else editorMessage("此格为透明空格，没有色卡色号。"); }
+      else if(ed.tool==="highlight") ed.highlight=ed.highlight===pattern.ids[i]?null:pattern.ids[i];
+      refreshEditor();
+    }
+    editCanvas.addEventListener("pointerdown",e=>{
+      if(editorLocked() || e.button!==0 || ed.drag) return;
+      const i=cellAt(e); if(i===null) return;
+      ed.pointerId=e.pointerId; ed.drag={start:i,end:i,x:e.clientX,y:e.clientY,moved:false,left:editScroll.scrollLeft,top:editScroll.scrollTop};
+      if(ed.tool==="box" || (ed.tool==="pan" && e.pointerType==="mouse")) {e.preventDefault(); editCanvas.setPointerCapture(e.pointerId);}
+    });
+    editCanvas.addEventListener("pointermove",e=>{
+      if(!ed.drag || ed.pointerId!==e.pointerId) return;
+      if(Math.hypot(e.clientX-ed.drag.x,e.clientY-ed.drag.y)>6) ed.drag.moved=true;
+      if(ed.tool==="box") { const i=cellAt(e); if(i!==null) ed.drag.end=i; scheduleEditorDraw(); }
+      else if(ed.tool==="pan" && e.pointerType==="mouse") { editScroll.scrollLeft=ed.drag.left+ed.drag.x-e.clientX; editScroll.scrollTop=ed.drag.top+ed.drag.y-e.clientY; }
+    });
+    function cancelGesture() { const id=ed.pointerId; ed.drag=null; ed.pointerId=null; if(id!=null && editCanvas.hasPointerCapture(id)) editCanvas.releasePointerCapture(id); scheduleEditorDraw(); }
+    editCanvas.addEventListener("pointerup",e=>{
+      if(!ed.drag || ed.pointerId!==e.pointerId) return;
+      const d=ed.drag; cancelGesture(); if(editorLocked()) return;
+      if(ed.tool==="box") {const b=rectBounds(d.start,d.end); ed.selected.clear(); for(let y=b.y0;y<=b.y1;y++)for(let x=b.x0;x<=b.x1;x++)ed.selected.add(y*pattern.cols+x); refreshEditor();}
+      else if(!d.moved && ed.tool!=="pan") actOnCell(cellAt(e));
+    });
+    editCanvas.addEventListener("pointercancel",cancelGesture);
+    editCanvas.addEventListener("lostpointercapture",()=>{if(ed.drag) cancelGesture();});
+    window.addEventListener("pointerup",()=>{if(ed.drag) cancelGesture();});
+    document.querySelectorAll("[data-tool]").forEach(b=>b.onclick=()=>{
+      if(editorLocked())return; cancelGesture(); ed.tool=b.dataset.tool;
+      document.querySelectorAll("[data-tool]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+      editCanvas.classList.toggle("is-box",ed.tool==="box");
+      $editor("editorHint").textContent={single:"单格：点按切换选择，拖动滚动。",box:"框选：拖动选择矩形（替换当前选区）。切换移动后滚动；Esc取消。",pick:"吸色：点按格子取得真实色卡颜色，透明空格不可吸色。",highlight:"高亮：点按显示全图同色位置，再点同色取消；不影响下载。",pan:"移动：拖动查看画布；不会改变图纸和选区。"}[ed.tool]+" 方向键移动光标，空格操作，Esc取消。";
+    });
+    function clearSelection() {cancelGesture();ed.selected.clear();ed.highlight=null;refreshEditor();}
+    $editor("editorCancel").onclick=clearSelection;
+    function commitReplacement(global=false) {
+      if(editorLocked() || ed.target===null) return;
+      const from=$editor("globalOriginal").value; if(global && from==="")return;
+      let n=0; for(let i=0;i<pattern.ids.length;i++)if((global?pattern.ids[i]===Number(from):ed.selected.has(i)) && pattern.ids[i]!==ed.target)n++;
+      if(!n) {editorMessage("所选格子已是目标颜色，没有更改。");return;}
+      const indices=new Uint32Array(n),before=new Int16Array(n); let k=0;
+      for(let i=0;i<pattern.ids.length;i++)if((global?pattern.ids[i]===Number(from):ed.selected.has(i)) && pattern.ids[i]!==ed.target){indices[k]=i;before[k++]=pattern.ids[i];}
+      for(const item of ed.redo) ed.bytes-=item.bytes; ed.redo=[];
+      const item={indices,before,after:ed.target,bytes:indices.byteLength+before.byteLength};
+      while(ed.undo.length && (ed.bytes+item.bytes>HISTORY_BYTES || ed.undo.length>=HISTORY_STEPS)) ed.bytes-=ed.undo.shift().bytes;
+      ed.undo.push(item); ed.bytes+=item.bytes;
+      for(const i of indices)pattern.ids[i]=ed.target;
+      afterEdit();editorMessage("已替换 "+n+" 格。可撤销；历史最多40步、16 MiB，较早记录会自动释放。");
+    }
+    function afterEdit() {
+      invalidateShare(false); hideSaver(); pendingFile=null;
+      summarize(pattern); colorSummary.textContent="编辑后 "+pattern.usage.length+" 色";
+      paint(); refreshEditor();
+    }
+    function historyMove(redo) {
+      if(editorLocked())return; const from=redo?ed.redo:ed.undo,to=redo?ed.undo:ed.redo,item=from.pop(); if(!item)return;
+      for(let n=0;n<item.indices.length;n++)pattern.ids[item.indices[n]]=redo?item.after:item.before[n];
+      to.push(item); afterEdit();editorMessage(redo?"已重做。":"已撤销。");
+    }
+    $editor("editorReplace").onclick=()=>commitReplacement(false);
+    $editor("globalReplace").onclick=()=>commitReplacement(true);
+    $editor("globalCancel").onclick=()=>{ed.target=null;ed.highlight=null;$editor("globalOriginal").value="";refreshEditor();};
+    $editor("returnSelection").onclick=()=>setWorkspace("edit",true);
+    // Delegate long presses so refreshing color cards does not accumulate global listeners.
+    let palettePress=null, paletteClickBlock=null;
+    function cancelPalettePress(blockClick=false) {
+      if(!palettePress)return;
+      clearTimeout(palettePress.timer);
+      if(blockClick) paletteClickBlock={until:Date.now()+1200};
+      palettePress=null;
+    }
+    document.addEventListener("pointerdown",e=>{
+      paletteClickBlock=null;
+      if(palettePress) {cancelPalettePress(true);return;}
+      const button=e.target.closest(".palette-grid button");
+      if(!button || button.disabled || editorLocked() || e.button!==0 || !e.isPrimary)return;
+      const id=Number(button.dataset.paletteId);
+      if(!pattern.usage.some(([used,count])=>used===id && count>0))return;
+      const press={pointerId:e.pointerId,x:e.clientX,y:e.clientY,button,timer:null};
+      palettePress=press;
+      press.timer=setTimeout(()=>{
+        if(palettePress!==press || !button.isConnected || editorLocked()) {cancelPalettePress();return;}
+        cancelPalettePress(true);
+        $editor("globalOriginal").value=String(id);
+        setWorkspace("colors",true);
+        $editor("globalOriginal").focus({preventScroll:true});
+      },550);
+    },true);
+    window.addEventListener("pointermove",e=>{
+      if(palettePress && e.pointerId===palettePress.pointerId && Math.hypot(e.clientX-palettePress.x,e.clientY-palettePress.y)>8) cancelPalettePress(true);
+    },{capture:true,passive:true});
+    window.addEventListener("pointerup",e=>{if(palettePress && e.pointerId===palettePress.pointerId)cancelPalettePress();},true);
+    window.addEventListener("pointercancel",()=>cancelPalettePress(true),true);
+    window.addEventListener("scroll",()=>cancelPalettePress(true),{capture:true,passive:true});
+    window.addEventListener("blur",()=>cancelPalettePress(true));
+    document.addEventListener("visibilitychange",()=>{if(document.hidden)cancelPalettePress(true);});
+    document.addEventListener("click",e=>{
+      if(e.detail>0 && paletteClickBlock && Date.now()<paletteClickBlock.until && e.target.closest(".palette-grid button")) {
+        paletteClickBlock=null;e.preventDefault();e.stopImmediatePropagation();
+      }
+    },true);
+    document.addEventListener("contextmenu",e=>{
+      if(e.target.closest(".palette-grid button") && (palettePress || (paletteClickBlock && Date.now()<paletteClickBlock.until))) e.preventDefault();
+    });
+    $editor("editorUndo").onclick=()=>historyMove(false); $editor("editorRedo").onclick=()=>historyMove(true);
+    $editor("editorAll").onclick=()=>{$editor("paletteAll").checked=true;setWorkspace("colors",true);};
+    for(const id of ["paletteAll","paletteSearch","globalOriginal"]) $editor(id).addEventListener(id==="paletteSearch"?"input":"change",refreshEditor);
+    function editorZoom(factor) { if(!pattern)return;cancelGesture();ed.zoom=Math.max(.5,Math.min(20,factor));scheduleEditorDraw();refreshEditorControls(); }
+    $editor("editorMinus").onclick=()=>editorZoom(ed.zoom/1.5);$editor("editorPlus").onclick=()=>editorZoom(ed.zoom*1.5);
+    $editor("editorFit").onclick=()=>{editorZoom(1);editScroll.scrollTo(0,0);};
+    editScroll.addEventListener("scroll",scheduleEditorDraw,{passive:true});
+    window.addEventListener("resize",scheduleEditorDraw);
+    editCanvas.addEventListener("focus",scheduleEditorDraw);editCanvas.addEventListener("blur",scheduleEditorDraw);
+    editCanvas.addEventListener("keydown",e=>{
+      if(editorLocked())return;
+      const changes={ArrowLeft:-1,ArrowRight:1,ArrowUp:-pattern.cols,ArrowDown:pattern.cols};
+      if(e.key in changes){e.preventDefault();ed.cursor=Math.max(0,Math.min(pattern.ids.length-1,ed.cursor+changes[e.key]));
+        const x=(ed.cursor%pattern.cols)*ed.cell,y=Math.floor(ed.cursor/pattern.cols)*ed.cell;
+        if(x<editScroll.scrollLeft)editScroll.scrollLeft=x;else if(x+ed.cell>editScroll.scrollLeft+editScroll.clientWidth)editScroll.scrollLeft=x+ed.cell-editScroll.clientWidth;
+        if(y<editScroll.scrollTop)editScroll.scrollTop=y;else if(y+ed.cell>editScroll.scrollTop+editScroll.clientHeight)editScroll.scrollTop=y+ed.cell-editScroll.clientHeight;
+        scheduleEditorDraw();
+      } else if(e.key===" " || e.key==="Enter"){e.preventDefault();actOnCell(ed.cursor);}
+    });
+    document.addEventListener("keydown",e=>{
+      if(ed.tab==="preview" || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+      if(e.key==="Escape"){e.preventDefault();cancelPalettePress(true);clearSelection();}
+      else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="z"){e.preventDefault();historyMove(e.shiftKey);}
+      else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="y"){e.preventDefault();historyMove(true);}
+    });
+    editorReady=true; refreshEditor();
   </script>
 </body>
 </html>
